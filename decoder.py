@@ -138,8 +138,8 @@ class Decoder:
 
     def calc_cost(self,posterior_logsig,post_samples,global_mu,global_logsig,global_latent_sample,posterior_mu,true_input,predictions):
         prior_mu,prior_logsig = self.prior(values=post_samples,num_units=self.units_encoder_lstm,global_latent=global_latent_sample,word_lens=self.word_lens,reuse=None)
-        cost,c1,c2,c3 = self.cost_function(predictions=predictions,true_input=true_input,global_mu=global_mu,global_logsig=global_logsig,prior_mu=prior_mu,prior_logsig=prior_logsig,posterior_mu=posterior_mu,posterior_logsig=posterior_logsig)
-        return cost,c1,c2,c3
+        cost,_,_,_ = self.cost_function(predictions=predictions,true_input=true_input,global_mu=global_mu,global_logsig=global_logsig,prior_mu=prior_mu,prior_logsig=prior_logsig,posterior_mu=posterior_mu,posterior_logsig=posterior_logsig)
+        return cost
 
     def generation(self,samples):
 
@@ -192,7 +192,7 @@ true_inp=true_mat
 posterior_mu =np.random.randn(10,30,40)
 posterior_logsig = np.exp(np.random.randn(10,30,40))
 
-cost,c1,c2,c3 = decoder.calc_cost(global_latent_sample=global_latent_o,global_logsig=global_logsig_o,global_mu=global_mu_o,predictions=out_o,true_input=tf.one_hot(indices=true_inp,depth =decoder.dict_length),posterior_logsig=posterior_logsig,posterior_mu=posterior_mu,post_samples=decoder.encodings)
+cost= decoder.calc_cost(prior_mu=posterior_mu,prior_logsig=posterior_logsig,global_latent_sample=global_latent_o,global_logsig=global_logsig_o,global_mu=global_mu_o,predictions=out_o,true_input=tf.one_hot(indices=true_inp,depth =decoder.dict_length),posterior_logsig=posterior_logsig,posterior_mu=posterior_mu,post_samples=decoder.encodings)
 
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
