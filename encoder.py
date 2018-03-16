@@ -58,9 +58,6 @@ def preprocess():
 	return sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index
 
 
-#preprocess the data 
-sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index = preprocess()
-
 #produce character embeddings 
 def embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index):
     max_char_len = 494
@@ -129,8 +126,14 @@ def embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,
         
     return s_tensor,eow_loc_all 
 
-#produce embeddings 
-data,eow_loc_all = embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index)
+
+def run_preprocess ():
+	#preprocess the data 
+	sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index = preprocess()
+	#produce embeddings 
+	data,eow_loc_all = embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index)
+
+	return data,eow_loc_all
 
 
 class Encoder:
@@ -211,31 +214,32 @@ class Encoder:
 		return word_state_out,mean_state_out,sigma_state_out
 
 
-max_char_len = 494
-batch_size = 52
-input_size = vocabulary_size
-hidden_size = 20
-num_batches = len(data) // batch_size
-arg_dict = {'max_char_len':max_char_len,'batch_size':batch_size,'input_size':input_size,'hidden_size':hidden_size}
-encoder = Encoder(**arg_dict)
+if __init__ == "__main__": 
+	max_char_len = 494
+	batch_size = 52
+	input_size = vocabulary_size
+	hidden_size = 20
+	num_batches = len(data) // batch_size
+	arg_dict = {'max_char_len':max_char_len,'batch_size':batch_size,'input_size':input_size,'hidden_size':hidden_size}
+	encoder = Encoder(**arg_dict)
 
-#placeholders
-inputs = tf.placeholder(tf.float32,[batch_size,max_char_len,input_size])
-word_pos = tf.placeholder(tf.float32,[batch_size,max_char_len])
+	#placeholders
+	inputs = tf.placeholder(tf.float32,[batch_size,max_char_len,input_size])
+	word_pos = tf.placeholder(tf.float32,[batch_size,max_char_len])
 
-word_state_out,mean_state_out,sigma_state_out = encoder.run_encoder(inputs,word_pos)
+	word_state_out,mean_state_out,sigma_state_out = encoder.run_encoder(inputs,word_pos)
 
-#example
-init_op = tf.global_variables_initializer()
-with tf.Session() as sess:
-    sess.run([init_op])
-    for epoch in range(1):
-        epoch_error = 0
-        
-        for bt in range(2):
-            x = data[bt*batch_size:(bt+1)*batch_size]
-            word_pos_batch = eow_loc_all[bt*batch_size:(bt+1)*batch_size]
-            word_state,mean_state,sigma_state = sess.run([word_state_out,mean_state_out,sigma_state_out],feed_dict={inputs:x,word_pos:word_pos_batch})
-                                                          
-                                                                                                                 
-            print(mean_state)
+	#example
+	init_op = tf.global_variables_initializer()
+	with tf.Session() as sess:
+	    sess.run([init_op])
+	    for epoch in range(1):
+	        epoch_error = 0
+	        
+	        for bt in range(2):
+	            x = data[bt*batch_size:(bt+1)*batch_size]
+	            word_pos_batch = eow_loc_all[bt*batch_size:(bt+1)*batch_size]
+	            word_state,mean_state,sigma_state = sess.run([word_state_out,mean_state_out,sigma_state_out],feed_dict={inputs:x,word_pos:word_pos_batch})
+	                                                          
+	                                                                                                                 
+	            print(mean_state)
