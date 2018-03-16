@@ -149,7 +149,7 @@ class Encoder:
 
 
 	# our [494, 52, 61] tensor becomes [[52, 61], [52, 61], ...]
-	def run_encoder(self,inputs,word_pos):
+	def run_encoder(self,inputs,word_pos,reuse):
 
 		inputs_t = tf.transpose(inputs,perm=[1, 0, 2])
 		_inputs_ta = tf.TensorArray(dtype=tf.float32, size=self.max_char_len,name='char_array')
@@ -205,7 +205,9 @@ class Encoder:
 
 		    return (elements_finished, next_input, next_cell_state, emit_output, next_loop_state)
 
-		outputs_ta, final_state_out, word_state = tf.nn.raw_rnn(cell, loop_fn)
+		with tf.variable_scope('encoder_rnn',reuse=reuse):
+			outputs_ta, final_state_out, word_state = tf.nn.raw_rnn(cell, loop_fn)
+			
 		word_state_out = word_state[0].stack()
 		mean_state_out = word_state[1].stack()
 		sigma_state_out = word_state[2].stack()
