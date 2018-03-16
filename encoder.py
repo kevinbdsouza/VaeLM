@@ -127,13 +127,13 @@ def embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,
     return s_tensor,eow_loc_all 
 
 
-def run_preprocess ():
+def run_preprocess():
 	#preprocess the data 
 	sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index = preprocess()
 	#produce embeddings 
 	data,eow_loc_all = embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index)
 
-	return data,eow_loc_all
+	return data,eow_loc_all,vocabulary_size
 
 
 class Encoder:
@@ -214,6 +214,10 @@ class Encoder:
 		return word_state_out,mean_state_out,sigma_state_out
 
 
+#data,eow_loc_all = run_preprocess()
+#print(len(data))
+
+'''
 if __init__ == "__main__": 
 	max_char_len = 494
 	batch_size = 52
@@ -243,3 +247,5 @@ if __init__ == "__main__":
 	                                                          
 	                                                                                                                 
 	            print(mean_state)
+
+'''
