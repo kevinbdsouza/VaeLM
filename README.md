@@ -1,7 +1,8 @@
 # graphs-and-NLP
 
-- check LSTM folder. The code gives a dynamic RNN error. It's not able to unpack the state tuple. Check?
+## Character Based Language Models Through Variational Sentence and Word Embeddings
 
-- Basic working VAE code in VAE folder 
+Contributors:
 
-- Character_level.ipynb contains just the basic processing. Have to build on it.  
+1. Zaccary Alperstein 
+2. Kevin Dsouza 
