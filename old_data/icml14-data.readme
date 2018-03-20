@@ -1,0 +1,71 @@
+### Preprocessed data for ICML 2014 experiments. ###
+
+This data set was derived from publicly available corpora as described in the paper,
+J.A. Botha & P. Blunsom, 2014, Compositional Morphology for Word Representations
+and Language Modelling. In Proceedings of ICML.
+See http://machinelearning.wustl.edu/mlpapers/papers/icml2014c2_botha14
+
+The data set is distributed to facilitate research, and should not be used in
+ways that violate any licenses governing the original corpora. 
+
+### Contents of this archive ###
+Each top-level directory named L1-L2 contains monolingual data for language L2.
+Dataset sub-directories:
+* 1m-mono = Data-1M in the paper.
+
+Files within each language-specific sub-directory:
+vocab
+  - the final vocabulary
+train.in
+  - preprocessed training data
+test.in
+  - preprocessed news2011 used as dev data
+finaltest.in
+  - preprocessed news2012 used as test data (results in Table 2, top half)
+
+FILE.in.transforms
+  - tokens that were OOV w.r.t. vocab and therefore replaced with <unk> while producing FILE.in.
+
+### MD5 Checksums ###
+fb75fc433a765f15f738cc9984d98db5 cs-en/1m-mono/finaltest.in
+37442714fb2954de60c8a96a5956c15d cs-en/1m-mono/finaltest.in.transforms
+ed8919ceb662d8cd4376713f3a09f7c7 cs-en/1m-mono/test.in
+e23edaa29a957b2aeef3d5832ba5dc38 cs-en/1m-mono/test.in.transforms
+2324334d9c130bbba37397afd779c90d cs-en/1m-mono/train.in
+44df953aaa3ff5c04bf20d71829dd0fc cs-en/1m-mono/train.in.transforms
+ff4b8957d86565a37bd83a81a1d2c7ec cs-en/1m-mono/vocab
+ba546aceb98c302114747388b3ad8d0f en-cs/1m-mono/finaltest.in
+f3bd3f79833a7974358e0fe31304b241 en-cs/1m-mono/finaltest.in.transforms
+3cc7f57fc72d5e02866f8151ddd708a1 en-cs/1m-mono/test.in
+fb381e987a12d2433e99df16e0303690 en-cs/1m-mono/test.in.transforms
+4ca6efd230c4e12c5d4fcc37dc74419a en-cs/1m-mono/train.in
+bb8d9499cb6d120848b36775ebeaa8a5 en-cs/1m-mono/train.in.transforms
+f5e150518b3f8bea2cafc23172e2bda2 en-cs/1m-mono/vocab
+53d5e967c830b4a13d2f550d2c90d297 en-de/1m-mono/finaltest.in
+bfac550f9f5887b4d53707c4f9c84d49 en-de/1m-mono/finaltest.in.transforms
+921c18dcd4250432975f68b5b7c9bcc2 en-de/1m-mono/test.in
+9950d5aa8936a48d419bd8bdf9eb4433 en-de/1m-mono/test.in.transforms
+7d7dfcbae32b7bd912a3c48f72327ec8 en-de/1m-mono/train.in
+9dc5c5984355c22f545f0606e5061172 en-de/1m-mono/train.in.transforms
+1ddbe28f41311a1c294eda30c1a2188a en-de/1m-mono/vocab
+f0ada379f59faca908947499ef3377cb en-es/1m-mono/finaltest.in
+2f9c8f03f1894ac8bf6dafcc5c3fddee en-es/1m-mono/finaltest.in.transforms
+51314829632daaf6a6a5bc2f2dd3577e en-es/1m-mono/test.in
+fee66e4cd169198d620bf4935ea1887f en-es/1m-mono/test.in.transforms
+d60f6d4736354e5799a19268d4b0c85a en-es/1m-mono/train.in
+3673495e0e00834b4007603fec807dc0 en-es/1m-mono/train.in.transforms
+7771c5bf1d8f57755a71509510d5cf0d en-es/1m-mono/vocab
+66c9aef310a96fded2bf7ac13345896e en-fr/1m-mono/finaltest.in
+c419cbc0285560ecffafc451cf4cd8d0 en-fr/1m-mono/finaltest.in.transforms
+b4d257cb621e4fceb441da2f24e73d9d en-fr/1m-mono/test.in
+8dea26243036883dd94c1172215f24ce en-fr/1m-mono/test.in.transforms
+f7becd203569599140d971ba965d1165 en-fr/1m-mono/train.in
+c6c0fb39b4b8f98581e104982cb0243f en-fr/1m-mono/train.in.transforms
+09f65eab68f70a59f1ccb6dae2566405 en-fr/1m-mono/vocab
+4600cf279db17f251929611697c9535b en-ru/1m-mono/finaltest.in
+b3e51aa3b003c317283189e309e946c1 en-ru/1m-mono/finaltest.in.transforms
+f1c3db44607a26f3061a770b1addffca en-ru/1m-mono/test.in
+3777c2a93309972eafc3d5072b292e4c en-ru/1m-mono/test.in.transforms
+753ed8a055811b4395d0433ade23b2e9 en-ru/1m-mono/train.in
+0333f61c94a3645cf114d1ef73a4f2e8 en-ru/1m-mono/train.in.transforms
+8b7234ebdccde8ed2104b72b36340377 en-ru/1m-mono/vocab

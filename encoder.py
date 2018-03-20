@@ -64,7 +64,8 @@ def embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,
     s_tensor = np.empty((len(sentences),max_char_len,vocabulary_size))
     word_loc_all = np.zeros((len(sentences),max_word_length))
     eow_loc_all = np.zeros((len(sentences),max_char_len))
-    
+    sen_lens = []
+
     for i in range(len(sentences)):
         s = sentences[i]
         embed = np.zeros((max_char_len,vocabulary_size))
@@ -116,7 +117,7 @@ def embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,
             
         s_tensor[i,:,:] = embed
         eow_loc_all[i,:] = eow_loc
-        
+        sen_lens.append(count+1)
         
         #to get word end locations to retrieve hidden states later 
         word_loc_all[i,0] = word_loc[0]
@@ -124,16 +125,16 @@ def embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,
             word_loc_all[i,j] = word_loc_all[i,j-1] + word_loc[j]
             
         
-    return s_tensor,eow_loc_all 
+    return s_tensor,eow_loc_all,sen_lens  
 
 
 def run_preprocess():
 	#preprocess the data 
 	sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index = preprocess()
 	#produce embeddings 
-	data,eow_loc_all = embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index)
+	data,eow_loc_all,sen_lens  = embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index)
 
-	return data,eow_loc_all,vocabulary_size
+	return data,eow_loc_all,sen_lens,vocabulary_size
 
 
 class Encoder:
