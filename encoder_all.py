@@ -9,29 +9,36 @@ from collections import Counter
 from random import random
 from nltk import word_tokenize
 
-def preprocess(lang):
+def preprocess(mode,lang):
 
-	#load text files 
-	train_sentences = [line.strip() for line in open("data/fr/train.txt").readlines()]
-	val_sentences = [line.strip() for line in open("data/fr/valid.txt").readlines()]
-	test_sentences = [line.strip() for line in open("data/fr/test.txt").readlines()]
-	train_sentences = [x for x in train_sentences if x] 
-	val_sentences = [x for x in val_sentences if x] 
-	test_sentences = [x for x in test_sentences if x]
-	
-	sentences = train_sentences
-	sentences = [["<SOS>"] + word_tokenize(sentence.lower()) + ["<EOS>"] for sentence in sentences]
+	sentences = [line.strip() for line in open("data/"+lang+"/"+mode+".txt").readlines()]
+	sentences = [x for x in sentences if x] 
 
 	if (lang == "english"):
-		max_char_len = 494
+
+		if mode == "train":
+        	max_char_len = 494
+    	elif mode == "val":
+        	max_char_len = 356
+    	elif mode == "test":
+        	max_char_len = 463
+
 		vocabulary = ["<SOS>"] + ["a"] + ["b"] + ["c"] + ["d"] + ["e"] + ["f"] + \
 		["g"] + ["h"] + ["i"] + ["j"] + ["k"] + ["l"] + ["m"] + ["n"] + ["o"] + \
 		["p"] + ["q"] + ["r"] + ["s"] + ["t"] + ["u"] + ["v"] + ["w"] + \
 		["x"] + ["y"] + ["z"] + ["<EOW>"] + ["<EOS>"] + [">"] + ["-"] + ["."] + ["'"] + ["0"] + ["1"] + ["2"] + ["3"] + \
 		["4"] + ["5"] + ["6"] + ["7"] + ["8"] + ["9"] + ["&"] + ["<"] + ["$"] + ["#"] + ["/"] + [","] + ["|"] + \
 		["@"] + ["%"] + ["^"] + ["\\"] + ["*"] + ["("] + [")"] + ["{"] + ["}"] + [":"] + [";"] 
+
 	elif (lang == "spanish"):
-		max_char_len = 520
+
+		if mode == "train":
+        	max_char_len = 520
+    	elif mode == "val":
+        	max_char_len = 521
+    	elif mode == "test":
+        	max_char_len = 680
+
 		vocabulary = ["<SOS>"] + ["a"] + ["á"] + ["ä"] + ["à"] + ["b"] + ["c"] + ["d"] + ["e"] + ["é"] + ["ê"] + \
 		["è"] + ["f"] + ["g"] + ["h"] + ["i"] + ["¡"] + ["ï"] + ["j"] + ["k"] + ["l"] + ["å"] + \
 		["í"] +["m"] + ["n"] + ["ñ"] + ["o"] + \
@@ -40,12 +47,20 @@ def preprocess(lang):
 		["4"] + ["5"] + ["6"] + ["7"] + ["8"] + ["9"] + ["&"] + ["<"] + ["$"] + ["#"] + ["/"] + [","] + ["|"] + \
 		["@"] + ["%"] + ["^"] + ["\\"] + ["*"] + ["("] + [")"] + ["{"] + ["}"] + [":"] + [";"] + ["¿"] + ["?"] + ["["] + \
 		["]"] + ["!"] + ["ø"] + ["ç"] + ["\xad"] + ["+"] + ["μ"] + ["√"] + ["ß"] + ["æ"]
+
 	elif (lang == "german"):
-		sentences.pop(23479)
-		sentences.pop(23479)
-		sentences.pop(23479)
-		sentences.pop(36324)
-		max_char_len = 604
+
+		if mode == "train":
+        	max_char_len = 604
+        	sentences.pop(23479)
+			sentences.pop(23479)
+			sentences.pop(23479)
+			sentences.pop(36324)
+    	elif mode == "val":
+        	max_char_len = 560
+    	elif mode == "test":
+        	max_char_len = 616
+		
 		vocabulary = ["<SOS>"] + ["a"] + ["ä"] + ["á"] + ["à"] + ["b"] + ["c"] + ["d"] + ["e"] + ["ê"] + ["é"] + ["è"] + \
 		["ë"] + ["f"] + ["g"] + ["h"] + ["i"] + ["¡"] + ["ï"] + ["j"] + ["k"] + ["l"] + \
 		["m"] + ["n"] + ["ñ"] + ["o"] + ["ó"] + ["ò"] + ["ô"] + ["í"] + \
@@ -54,10 +69,18 @@ def preprocess(lang):
 		["4"] + ["5"] + ["6"] + ["7"] + ["8"] + ["9"] + ["&"] + ["<"] + ["$"] + ["#"] + ["/"] + [","] + ["|"] + \
 		["@"] + ["%"] + ["^"] + ["\\"] + ["*"] + ["("] + [")"] + ["{"] + ["}"] + [":"] + [";"] + ["ß"] + ["?"] + ["!"] + \
 		["\xad"] + ["ø"] + ["ç"] + ["+"] + ["æ"] + ["["] + ["]"] + ["μ"] + ["å"] + ["'̧"]
+
 	elif (lang == "russian"):
-		sentences.pop(3098)
-		sentences.pop(31275)
-		max_char_len = 624
+
+		if mode == "train":
+        	max_char_len = 624
+        	sentences.pop(3098)
+			sentences.pop(31275)
+    	elif mode == "val":
+        	max_char_len = 556
+    	elif mode == "test":
+        	max_char_len = 626
+
 		vocabulary = ["<SOS>"] + ["а"] + ["b"] + ["с"] + ["d"] + ["е"] + ["f"] + ["в"] + ["к"] + ["х"] + ["ё"] + \
 		["g"] + ["h"] + ["i"] + ["j"] + ["k"] + ["l"] + ["m"] + ["n"] + ["о"] + ["н"] + ["я"] + \
 		["р"] + ["q"] + ["r"] + ["s"] + ["t"] + ["u"] + ["v"] + ["w"] + ["з"] + ["г"] + ["т"] + ["м"] + \
@@ -66,8 +89,17 @@ def preprocess(lang):
 		["@"] + ["%"] + ["^"] + ["\\"] + ["*"] + ["("] + [")"] + ["{"] + ["}"] + [":"] + [";"] + ["и"] + ["ч"] + ["л"] + ["д"] + \
 		["п"] + ["ц"] + ["ь"] + ["ы"] + ["б"] + ["щ"] + ["ш"] + ["э"] + ["ф"] + ["й"] + ["?"] + ["ж"] + ["ю"] + ["ъ"] + ["`"] + \
 		["!"] + ["["] + ["]"] + ["<"] + ["ц"] + ["+"] + ["="]
+
 	elif (lang == "french"):
-		max_char_len = 524
+
+		if mode == "train":
+        	max_char_len = 524
+    	elif mode == "val":
+        	max_char_len = 567
+    	elif mode == "test":
+        	max_char_len = 673
+
+		
 		vocabulary = ["<SOS>"] + ["a"] + ["ä"] + ["á"] + ["à"] + ["â"]+ ["b"] + ["c"] + ["d"] + ["e"] + ["ê"] + ["é"] + ["è"] + \
 		["ë"] + ["f"] + ["g"] + ["h"] + ["i"] + ["¡"] + ["ï"] + ["j"] + ["k"] + ["l"] + \
 		["m"] + ["n"] + ["ñ"] + ["o"] + ["ó"] + ["ò"] + ["ô"] + ["í"] + ["î"] + \
@@ -76,9 +108,10 @@ def preprocess(lang):
 		["4"] + ["5"] + ["6"] + ["7"] + ["8"] + ["9"] + ["&"] + ["<"] + ["$"] + ["#"] + ["/"] + [","] + ["|"] + \
 		["@"] + ["%"] + ["^"] + ["\\"] + ["*"] + ["("] + [")"] + ["{"] + ["}"] + [":"] + [";"] + ["ß"] + ["?"] + ["!"] + \
 		["\xad"] + ["ø"] + ["ç"] + ["+"] + ["æ"] + ["["] + ["]"] + ["μ"] + ["å"] + ["'̧"]
+
+
+	sentences = [["<SOS>"] + word_tokenize(sentence.lower()) + ["<EOS>"] for sentence in sentences]
 		
-
-
 	#set > as unk 
 	for ind,sen in enumerate(sentences):
 	    for i in range(20):
@@ -115,7 +148,7 @@ def embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,
     word_loc_all = np.zeros((len(sentences),max_word_length))
     eow_loc_all = np.zeros((len(sentences),max_char_len))
     sen_lens = []
-
+    num_words = []
     for i in range(len(sentences)):
         s = sentences[i]
         embed = np.zeros((max_char_len,vocabulary_size))
@@ -167,6 +200,9 @@ def embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,
             
         s_tensor[i,:,:] = embed
         eow_loc_all[i,:] = eow_loc
+        n_w = int(np.sum(eow_loc_all[i]))
+        
+        num_words.append(2*n_w - 1)
         sen_lens.append(count+1)
         
         #to get word end locations to retrieve hidden states later 
@@ -175,16 +211,16 @@ def embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,
             word_loc_all[i,j] = word_loc_all[i,j-1] + word_loc[j]
             
         
-    return s_tensor,eow_loc_all,sen_lens  
+    return s_tensor,eow_loc_all,sen_lens,num_words  
 
 
-def run_preprocess(lang):
+def run_preprocess(mode,lang):
 	#preprocess the data 
-	sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index,max_char_len = preprocess(lang)
+	sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index,max_char_len = preprocess(mode,lang)
 	#produce embeddings 
-	data,eow_loc_all,sen_lens  = embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index,max_char_len)
+	data,eow_loc_all,sen_lens,num_words = embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index,max_char_len)
 
-	return data,eow_loc_all,sen_lens,vocabulary_size
+	return data,eow_loc_all,sen_lens,num_words,vocabulary_size
 
 
 class Encoder:
