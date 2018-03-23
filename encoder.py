@@ -20,12 +20,15 @@ def preprocess(mode):
 	test_sentences = [x for x in test_sentences if x]
 
 	if mode == "train":
-	    sentences = train_sentences
-	elif mode == "val":
-	    sentences = val_sentences
-	elif mode == "test":
-	    sentences = val_sentences
-        
+        sentences = train_sentences
+        max_char_len = 494
+    elif mode == "val":
+        sentences = val_sentences
+        max_char_len = 356
+    elif mode == "test":
+        sentences = test_sentences
+        max_char_len = 463
+
 	sentences = [["<SOS>"] + word_tokenize(sentence.lower()) + ["<EOS>"] for sentence in sentences]
 
 	#set > as unk 
@@ -62,12 +65,11 @@ def preprocess(mode):
 
 
 
-	return sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index
+	return sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index,max_char_len
 
 
 #produce character embeddings 
-def embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index):
-    max_char_len = 494
+def embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index,max_char_len):
     s_tensor = np.empty((len(sentences),max_char_len,vocabulary_size))
     word_loc_all = np.zeros((len(sentences),max_word_length))
     eow_loc_all = np.zeros((len(sentences),max_char_len))
@@ -140,9 +142,9 @@ def embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,
 
 def run_preprocess(mode):
 	#preprocess the data 
-	sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index = preprocess(mode)
+	sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index,max_char_len = preprocess(mode)
 	#produce embeddings 
-	data,eow_loc_all,sen_lens,num_words    = embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index)
+	data,eow_loc_all,sen_lens,num_words = embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index,max_char_len)
 
 	return data,eow_loc_all,sen_lens,num_words,vocabulary_size
 
