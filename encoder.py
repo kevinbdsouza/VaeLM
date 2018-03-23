@@ -9,16 +9,23 @@ from collections import Counter
 from random import random
 from nltk import word_tokenize
 
-def preprocess():
+def preprocess(mode):
 
 	#load text files 
-	train_sentences = [line.strip() for line in open("LSTM/LSTM/simple-examples/data/ptb.train.txt").readlines()]
-	val_sentences = [line.strip() for line in open("LSTM/LSTM/simple-examples/data/ptb.valid.txt").readlines()]
-	test_sentences = [line.strip() for line in open("LSTM/LSTM/simple-examples/data/ptb.test.txt").readlines()]
+	train_sentences = [line.strip() for line in open("data/PTB/ptb.train.txt").readlines()]
+	val_sentences = [line.strip() for line in open("data/PTB/ptb.valid.txt").readlines()]
+	test_sentences = [line.strip() for line in open("data/PTB/ptb.test.txt").readlines()]
 	train_sentences = [x for x in train_sentences if x] 
 	val_sentences = [x for x in val_sentences if x] 
 	test_sentences = [x for x in test_sentences if x]
-	sentences = train_sentences
+
+	if mode == "train":
+	    sentences = train_sentences
+	elif mode == "val":
+	    sentences = val_sentences
+	elif mode == "test":
+	    sentences = val_sentences
+        
 	sentences = [["<SOS>"] + word_tokenize(sentence.lower()) + ["<EOS>"] for sentence in sentences]
 
 	#set > as unk 
@@ -65,7 +72,7 @@ def embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,
     word_loc_all = np.zeros((len(sentences),max_word_length))
     eow_loc_all = np.zeros((len(sentences),max_char_len))
     sen_lens = []
-
+    num_words = []
     for i in range(len(sentences)):
         s = sentences[i]
         embed = np.zeros((max_char_len,vocabulary_size))
@@ -117,6 +124,9 @@ def embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,
             
         s_tensor[i,:,:] = embed
         eow_loc_all[i,:] = eow_loc
+        n_w = int(np.sum(eow_loc_all[i]))
+        
+        num_words.append(2*n_w - 1)
         sen_lens.append(count+1)
         
         #to get word end locations to retrieve hidden states later 
@@ -125,16 +135,16 @@ def embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,
             word_loc_all[i,j] = word_loc_all[i,j-1] + word_loc[j]
             
         
-    return s_tensor,eow_loc_all,sen_lens  
+    return s_tensor,eow_loc_all,sen_lens,num_words   
 
 
-def run_preprocess():
+def run_preprocess(mode):
 	#preprocess the data 
-	sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index = preprocess()
+	sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index = preprocess(mode)
 	#produce embeddings 
-	data,eow_loc_all,sen_lens  = embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index)
+	data,eow_loc_all,sen_lens,num_words    = embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index)
 
-	return data,eow_loc_all,sen_lens,vocabulary_size
+	return data,eow_loc_all,sen_lens,num_words,vocabulary_size
 
 
 class Encoder:
@@ -183,7 +193,7 @@ class Encoder:
 		        z_concat = tf.contrib.layers.fully_connected(next_sampled_input,2*self.hidden_size)
 		        z_mean = z_concat[:,:20]
 		        z_log_sigma_sq =  z_concat[:,20:40]
-		        eps = tf.random_normal((batch_size,hidden_size),0,1,dtype=tf.float32)
+		        eps = tf.random_normal((self.batch_size,self.hidden_size),0,1,dtype=tf.float32)
 		        z_sample = tf.add(z_mean,tf.multiply(tf.sqrt(tf.exp(z_log_sigma_sq)),eps))
 		        
 		        z_sample = tf.multiply(z_sample,word_slice)

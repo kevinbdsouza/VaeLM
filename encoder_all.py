@@ -12,12 +12,13 @@ from nltk import word_tokenize
 def preprocess(lang):
 
 	#load text files 
-	train_sentences = [line.strip() for line in open("LSTM/LSTM/simple-examples/data/ptb.train.txt").readlines()]
-	val_sentences = [line.strip() for line in open("LSTM/LSTM/simple-examples/data/ptb.valid.txt").readlines()]
-	test_sentences = [line.strip() for line in open("LSTM/LSTM/simple-examples/data/ptb.test.txt").readlines()]
+	train_sentences = [line.strip() for line in open("data/fr/train.txt").readlines()]
+	val_sentences = [line.strip() for line in open("data/fr/valid.txt").readlines()]
+	test_sentences = [line.strip() for line in open("data/fr/test.txt").readlines()]
 	train_sentences = [x for x in train_sentences if x] 
 	val_sentences = [x for x in val_sentences if x] 
 	test_sentences = [x for x in test_sentences if x]
+	
 	sentences = train_sentences
 	sentences = [["<SOS>"] + word_tokenize(sentence.lower()) + ["<EOS>"] for sentence in sentences]
 
