@@ -177,23 +177,23 @@ class Decoder:
 
 
 #Example usage
-batch_len = np.random.randint(low=0,high=30,size=[10])
-arg_dict = {'global_lat_dim':10,'word_lens':batch_len,'batch_size':10,'max_num_words':30,'decoder_units':40,'encodings' : np.random.randn(10,30,40),'sentence_lens':np.random.randint(low=0,high=30,size=10),'num_sentence_characters':200,'dict_length':26}
-decoder = Decoder(**arg_dict)
-word_encoding_placeholder=tf.placeholder(dtype=tf.float32,shape=[decoder.batch_size,decoder.max_num_words,np.shape(decoder.encodings)[-1]])
+#batch_len = np.random.randint(low=0,high=30,size=[10])
+#arg_dict = {'global_lat_dim':10,'word_lens':batch_len,'batch_size':10,'max_num_words':30,'decoder_units':40,'encodings' : np.random.randn(10,30,40),'sentence_lens':np.random.randint(low=0,high=30,size=10),'num_sentence_characters':200,'dict_length':26}
+#decoder = Decoder(**arg_dict)
+#word_encoding_placeholder=tf.placeholder(dtype=tf.float32,shape=[decoder.batch_size,decoder.max_num_words,np.shape(decoder.encodings)[-1]])
 
-out_o, global_latent_o,global_logsig_o,global_mu_o = decoder.run_decoder(units_lstm_decoder=40,lat_words=word_encoding_placeholder,units_dense_global=40,sequence_length=batch_len)
-true_mat =np.zeros(shape=[decoder.batch_size,decoder.num_sentence_characters],dtype=np.float32)
-for k,i in enumerate(batch_len):
-    true_mat[k,0:i] = np.random.randint(low=0,high=decoder.dict_length,size=[i])
+#out_o, global_latent_o,global_logsig_o,global_mu_o = decoder.run_decoder(units_lstm_decoder=40,lat_words=word_encoding_placeholder,units_dense_global=40,sequence_length=batch_len)
+#true_mat =np.zeros(shape=[decoder.batch_size,decoder.num_sentence_characters],dtype=np.float32)
+#for k,i in enumerate(batch_len):
+#    true_mat[k,0:i] = np.random.randint(low=0,high=decoder.dict_length,size=[i])
 
-true_inp=true_mat
+#true_inp=true_mat
 
-posterior_mu =np.random.randn(10,30,40)
-posterior_logsig = np.exp(np.random.randn(10,30,40))
+#posterior_mu =np.random.randn(10,30,40)
+#posterior_logsig = np.exp(np.random.randn(10,30,40))
 
-cost= decoder.calc_cost(prior_mu=posterior_mu,prior_logsig=posterior_logsig,global_latent_sample=global_latent_o,global_logsig=global_logsig_o,global_mu=global_mu_o,predictions=out_o,true_input=tf.one_hot(indices=true_inp,depth =decoder.dict_length),posterior_logsig=posterior_logsig,posterior_mu=posterior_mu,post_samples=decoder.encodings)
-
-with tf.Session() as sess:
-    sess.run(tf.global_variables_initializer())
-    cost_o=sess.run([cost],feed_dict={word_encoding_placeholder:decoder.encodings})
+#cost= decoder.calc_cost(prior_mu=posterior_mu,prior_logsig=posterior_logsig,global_latent_sample=global_latent_o,global_logsig=global_logsig_o,global_mu=global_mu_o,predictions=out_o,true_input=tf.one_hot(indices=true_inp,depth =decoder.dict_length),posterior_logsig=posterior_logsig,posterior_mu=posterior_mu,post_samples=decoder.encodings)
+#
+#with tf.Session() as sess:
+#    sess.run(tf.global_variables_initializer())
+ #   cost_o=sess.run([cost],feed_dict={word_encoding_placeholder:decoder.encodings})
