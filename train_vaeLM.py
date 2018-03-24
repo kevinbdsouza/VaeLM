@@ -2,7 +2,11 @@ from decoder import Decoder
 import encoder
 import tensorflow as tf
 import numpy as np
+from functools import reduce
 
+def factors(n):
+    return set(reduce(list.__add__,
+                ([i, n//i] for i in range(1, int(pow(n, 0.5) + 1)) if n % i == 0)))
 
 def prep_perm_matrix(batch_size, word_pos_matrix, max_char_len):
     word_pos_matrix = np.reshape(word_pos_matrix, [-1, batch_size, max_char_len])
@@ -109,11 +113,16 @@ sentence_lens_nwords = np.reshape(sentence_lens_nwords,newshape=[-1,batch_size])
 sentence_lens_nchars = np.reshape(sentence_lens_nchars,newshape=[-1,batch_size])
 
 #shaping for validation set
+batch_size_val = batch_size
+n_valid = np.shape(onehot_words_val)[0]
 
-onehot_words_val = np.reshape(onehot_words_val,newshape=[-1,batch_size,max_char_len,vocabulary_size])
-word_pos_val = np.reshape(word_pos_val,newshape=[-1,batch_size,max_char_len])
-sentence_lens_nwords_val = np.reshape(sentence_lens_nwords_val,newshape=[-1,batch_size])
-sentence_lens_nchars_val = np.reshape(sentence_lens_nchars_val,newshape=[-1,batch_size])
+r = n_valid%batch_size_val
+n_valid_use= n_valid-r
+#might have to fix this before reporting results
+onehot_words_val = np.reshape(onehot_words_val[0:n_valid_use,...],newshape=[-1,batch_size_val,max_char_len,vocabulary_size])
+word_pos_val = np.reshape(word_pos_val[0:n_valid_use,...],newshape=[-1,batch_size_val,max_char_len])
+sentence_lens_nwords_val = np.reshape(sentence_lens_nwords_val[0:n_valid_use],newshape=[-1,batch_size_val])
+sentence_lens_nchars_val = np.reshape(sentence_lens_nchars_val[0:n_valid_use],newshape=[-1,batch_size_val])
 
 ###KL annealing parameters
 shift = 0
@@ -141,13 +150,16 @@ onehot_words_pl_val =tf.placeholder(name='onehot_words_val',dtype=tf.float32,sha
 word_pos_pl_val =tf.placeholder(name='word_pos_val',dtype=tf.float32,shape=[batch_size, max_char_len])
 sent_char_len_list_pl_val= tf.placeholder(name='sent_char_len_list_val',dtype=tf.float32,shape=[batch_size])
 #testing graph
+
+perm_mat_val,max_word_len,sent_len_list_val = prep_perm_matrix(batch_size=batch_size_val,word_pos_matrix=word_pos_val,max_char_len=max_char_len)
+
 word_state_out_val, mean_state_out_val, logsig_state_out_val = encoder_k.run_encoder(inputs=onehot_words_pl_val, word_pos=word_pos_pl_val,reuse=True)
-word_state_out_val.set_shape([max_char_len,batch_size,hidden_size])
-mean_state_out_val.set_shape([max_char_len,batch_size,hidden_size])
-logsig_state_out.set_shape([max_char_len,batch_size,hidden_size])
-word_state_out_p_val = permute_encoder_output(encoder_out=word_state_out, perm_mat=perm_mat_pl, batch_size=batch_size, max_word_len=max_word_len)
-mean_state_out_p_val = permute_encoder_output(encoder_out=mean_state_out, perm_mat=perm_mat_pl, batch_size=batch_size, max_word_len=max_word_len)
-logsig_state_out_p_val = permute_encoder_output(encoder_out=logsig_state_out, perm_mat=perm_mat_pl, batch_size=batch_size, max_word_len=max_word_len)
+word_state_out_val.set_shape([max_char_len,batch_size_val,hidden_size])
+mean_state_out_val.set_shape([max_char_len,batch_size_val,hidden_size])
+logsig_state_out.set_shape([max_char_len,batch_size_val,hidden_size])
+word_state_out_p_val = permute_encoder_output(encoder_out=word_state_out, perm_mat=perm_mat_pl, batch_size=batch_size_val, max_word_len=max_word_len)
+mean_state_out_p_val = permute_encoder_output(encoder_out=mean_state_out, perm_mat=perm_mat_pl, batch_size=batch_size_val, max_word_len=max_word_len)
+logsig_state_out_p_val = permute_encoder_output(encoder_out=logsig_state_out, perm_mat=perm_mat_pl, batch_size=batch_size_val, max_word_len=max_word_len)
 out_o_val, global_latent_o_val,global_logsig_o_val,global_mu_o_val = decoder.run_decoder(reuse=True,units_lstm_decoder=decoder_dim,lat_words=word_state_out_p_val,units_dense_global=decoder.global_lat_dim,sequence_length=tf.cast(sent_char_len_list_pl_val,dtype=tf.int32))
 #test cost
 test_cost = decoder.test_calc_cost(posterior_logsig=logsig_state_out_p_val,post_samples=word_state_out_p_val,global_mu=global_mu_o_val,global_logsig=global_logsig_o_val,global_latent_sample=global_latent_o_val,posterior_mu=mean_state_out_p_val,true_input=onehot_words_pl_val,predictions=out_o_val)
@@ -172,9 +184,9 @@ for epoch in range(n_epochs):
         if count % 1000:
             # testing on the validation set
             val_predictions, val_cost = sess.run(
-                [out_o_val, cost], feed_dict={onehot_words_pl_val: onehot_words_val[batch], word_pos_pl_val: word_pos_val[batch],
-                                     perm_mat_pl_val: perm_mat_val[batch], sent_word_len_list_pl_val: sentence_lens_nwords_val[batch],
-                                     sent_char_len_list_pl_val: sentence_lens_nchars_val[batch]})
+                [out_o_val, cost], feed_dict={onehot_words_pl_val: onehot_words_val[0], word_pos_pl_val: word_pos_val[0],
+                                     perm_mat_pl_val: perm_mat_val[0], sent_word_len_list_pl_val: sentence_lens_nwords_val[0],
+                                     sent_char_len_list_pl_val: sentence_lens_nchars_val[0]})
         if count % 10000:
             # testing on the generative model
             gen = sess.run([gen_samples])
