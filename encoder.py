@@ -65,7 +65,7 @@ def preprocess(mode):
 
 
 
-	return sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index,max_char_len
+	return sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index,max_char_len,index2token
 
 
 #produce character embeddings 
@@ -142,11 +142,11 @@ def embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,
 
 def run_preprocess(mode):
 	#preprocess the data 
-	sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index,max_char_len = preprocess(mode)
+	sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index,max_char_len,index2token = preprocess(mode)
 	#produce embeddings 
 	data,eow_loc_all,sen_lens,num_words = embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index,max_char_len)
 
-	return data,eow_loc_all,sen_lens,num_words,vocabulary_size
+	return data,eow_loc_all,sen_lens,num_words,vocabulary_size,index2token
 
 def get_output_sentences(index2token,indices):
 	#indices of size (_,maxChar)
