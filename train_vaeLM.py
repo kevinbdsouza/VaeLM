@@ -191,6 +191,8 @@ def train(n_epochs,network_dict,**kwargs):
                 # testing on the generative model
                 gen_o_np = sess.run([gen_samples])
 
+    sess.close()
+
 
 
 
