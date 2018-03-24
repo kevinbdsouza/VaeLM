@@ -12,22 +12,22 @@ from nltk import word_tokenize
 def preprocess(mode):
 
 	#load text files 
-	train_sentences = [line.strip() for line in open("data/PTB/ptb.train.txt").readlines()]
-	val_sentences = [line.strip() for line in open("data/PTB/ptb.valid.txt").readlines()]
-	test_sentences = [line.strip() for line in open("data/PTB/ptb.test.txt").readlines()]
+	train_sentences = [line.strip() for line in open("data/english/train.txt").readlines()]
+	val_sentences = [line.strip() for line in open("data/english/valid.txt").readlines()]
+	test_sentences = [line.strip() for line in open("data/english/test.txt").readlines()]
 	train_sentences = [x for x in train_sentences if x] 
 	val_sentences = [x for x in val_sentences if x] 
 	test_sentences = [x for x in test_sentences if x]
 
 	if mode == "train":
-        sentences = train_sentences
-        max_char_len = 494
-    elif mode == "val":
-        sentences = val_sentences
-        max_char_len = 356
-    elif mode == "test":
-        sentences = test_sentences
-        max_char_len = 463
+	    sentences = train_sentences
+	    max_char_len = 494
+	elif mode == "val":
+	    sentences = val_sentences
+	    max_char_len = 356
+	elif mode == "test":
+	    sentences = test_sentences
+	    max_char_len = 463
 
 	sentences = [["<SOS>"] + word_tokenize(sentence.lower()) + ["<EOS>"] for sentence in sentences]
 
@@ -147,6 +147,28 @@ def run_preprocess(mode):
 	data,eow_loc_all,sen_lens,num_words = embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index,max_char_len)
 
 	return data,eow_loc_all,sen_lens,num_words,vocabulary_size
+
+def get_output_sentences(index2token,indices):
+	#indices of size (_,maxChar)
+	space = ""
+	sentences_all = []
+	for sample in range(len(indices)):
+		sentence = []
+		sen = indices[sample]
+		for char in range(len(a[sample])):
+		    if (index2token.get(sen[char]) == "<SOS>"):
+		        sentence.append("")
+		    elif (index2token.get(sen[char]) == "<EOS>"):
+		        break
+		    elif (index2token.get(sen[char]) == "<EOW>"):
+		        sentence.append(" ")
+		    else: 
+		        sentence.append(index2token.get(sen[char]))
+		        
+		sentences_all.append(space.join(sentence))
+
+	return sentences_all
+
 
 
 class Encoder:
