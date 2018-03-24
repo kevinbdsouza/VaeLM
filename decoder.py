@@ -14,7 +14,6 @@ class Decoder:
         self.decoder_units=kwargs['decoder_units']
         self.units_encoder_lstm = kwargs['encoder_dim']
         self.lat_word_dim= kwargs['lat_word_dim']
-        self.sentence_word_lens=kwargs['sentence_word_lens']
         self.global_lat_dim =kwargs['global_lat_dim']
 
     def make_global_latent(self,values,units_dense):
@@ -162,8 +161,8 @@ class Decoder:
         cost, reconstruction, kl_p3, kl_p1,kl_global,kl_p2,anneal_c= self.cost_function(predictions=predictions,true_input=true_input,global_mu=global_mu,global_logsig=global_logsig,prior_mu=prior_mu,prior_logsig=prior_logsig,posterior_mu=posterior_mu,posterior_logsig=posterior_logsig,shift=shift, total_steps=total_steps, global_step=global_step)
         return cost,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal_c
 
-    def test_calc_cost(self,posterior_logsig,post_samples,global_mu,global_logsig,global_latent_sample,posterior_mu,true_input,predictions):
-        prior_mu,prior_logsig = self.prior(values=post_samples,num_units=self.units_encoder_lstm,global_latent=global_latent_sample,word_lens=self.sentence_word_lens,reuse=True)
+    def test_calc_cost(self,posterior_logsig,post_samples,global_mu,global_logsig,global_latent_sample,posterior_mu,true_input,predictions,sentence_word_lens):
+        prior_mu,prior_logsig = self.prior(values=post_samples,num_units=self.units_encoder_lstm,global_latent=global_latent_sample,word_lens=sentence_word_lens,reuse=True)
         cost,_,_,_ = self.test_cost_function(predictions=predictions,true_input=true_input,global_mu=global_mu,global_logsig=global_logsig,prior_mu=prior_mu,prior_logsig=prior_logsig,posterior_mu=posterior_mu,posterior_logsig=posterior_logsig)
         return cost
 
