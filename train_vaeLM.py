@@ -57,11 +57,11 @@ def train(n_epochs,network_dict,**kwargs):
     onehot_words,word_pos,sentence_lens_nchars,sentence_lens_nwords,vocabulary_size = encoder.run_preprocess(mode='train')
     onehot_words_val,word_pos_val,sentence_lens_nchars_val,sentence_lens_nwords_val,vocabulary_size_val = encoder.run_preprocess(mode='val')
 
-    max_char_len = 494 #kwargs['max_char_len']
-    batch_size = 52 #kwargs['batch_size']
+    max_char_len = kwargs['max_char_len']
+    batch_size = kwargs['batch_size']
     input_size = vocabulary_size
-    hidden_size = 20 #kwargs['hidden_size']
-    decoder_dim = 20 #kwargs['decoder_dim']
+    hidden_size = kwargs['hidden_size']
+    decoder_dim = kwargs['decoder_dim']
     num_batches = len(onehot_words) // batch_size
 
 
@@ -196,9 +196,12 @@ def train(n_epochs,network_dict,**kwargs):
 
 
 
+max_char_len = 494
+batch_size = 52
+hidden_size = 20
+decoder_dim = 20
 
 train_dict={'max_char_len':494,'batch_size':52,'hidden_size':20,'decoder_dim':20}
-network_dict = {'max_char_len': max_char_len, 'batch_size': batch_size, 'input_size': input_size,
-            'hidden_size': hidden_size}
+network_dict = {'max_char_len': max_char_len, 'batch_size': batch_size,'hidden_size': hidden_size}
 
 train(n_epochs=1,network_dict=network_dict,**train_dict)
