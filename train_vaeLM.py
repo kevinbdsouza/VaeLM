@@ -63,7 +63,7 @@ def train(n_epochs,network_dict,**kwargs):
     hidden_size = kwargs['hidden_size']
     decoder_dim = kwargs['decoder_dim']
     num_batches = len(onehot_words) // batch_size
-
+    network_dict['input_size'] = input_size
 
 
     encoder_k = encoder.Encoder(**network_dict)
