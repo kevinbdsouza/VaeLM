@@ -53,8 +53,7 @@ def permute_encoder_output(encoder_out, perm_mat, batch_size, max_word_len):
     o = tf.stack([tf.gather(params=i, indices=j, axis=0) for i, j in zip(tf.unstack(o, axis=0), tf.unstack(perm_mat,axis=0))])
     return o
 
-n_epochs=1
-def train(n_epochs,**kwargs,network_dict):
+def train(n_epochs,network_dict,**kwargs):
     onehot_words,word_pos,sentence_lens_nchars,sentence_lens_nwords,vocabulary_size = encoder.run_preprocess(mode='train')
     onehot_words_val,word_pos_val,sentence_lens_nchars_val,sentence_lens_nwords_val,vocabulary_size_val = encoder.run_preprocess(mode='val')
 
@@ -199,4 +198,4 @@ train_dict={'max_char_len':494,'batch_size':52,'hidden_size':20,'decoder_dim':20
 network_dict = {'max_char_len': max_char_len, 'batch_size': batch_size, 'input_size': input_size,
             'hidden_size': hidden_size}
 
-train(n_epochs=1,**train_dict,network_dict=network_dict)
+train(n_epochs=1,network_dict=network_dict,**train_dict)
