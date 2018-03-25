@@ -209,15 +209,15 @@ class Encoder:
 		        next_loop_state = (sample_loop_state,mean_loop_state,sigma_loop_state)
 
 		    else:
-		        word_slice = tf.tile(word_pos[:,time-1],[20])
-		        word_slice = tf.reshape(word_slice,[20,52])
+		        word_slice = tf.tile(word_pos[:,time-1],[self.hidden_size])
+		        word_slice = tf.reshape(word_slice,[self.hidden_size,self.batch_size])
 		        word_slice = tf.transpose(word_slice,perm=[1,0])
 		        next_sampled_input =  tf.multiply(cell_output,word_slice)
 		        
 		        #reparametrization
 		        z_concat = tf.contrib.layers.fully_connected(next_sampled_input,2*self.hidden_size)
-		        z_mean = z_concat[:,:20]
-		        z_log_sigma_sq =  z_concat[:,20:40]
+		        z_mean = z_concat[:,:self.hidden_size]
+		        z_log_sigma_sq =  z_concat[:,self.hidden_size:self.hidden_size*2]
 		        eps = tf.random_normal((self.batch_size,self.hidden_size),0,1,dtype=tf.float32)
 		        z_sample = tf.add(z_mean,tf.multiply(tf.sqrt(tf.exp(z_log_sigma_sq)),eps))
 		        

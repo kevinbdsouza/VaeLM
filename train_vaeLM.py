@@ -178,7 +178,7 @@ def train(n_epochs,network_dict,**kwargs):
 
     ######
     for epoch in range(n_epochs):
-        inds = range(np.shape(onehot_words)[0])
+        inds = list(range(np.shape(onehot_words)[0]))
         np.random.shuffle(inds)
         for count,batch in enumerate(inds):
             train_predictions_o_np, train_cost_o_np, _, global_step_o_np,train_rec_cost_o_np,_,_,_,_,anneal_constant=sess.run([out_o,cost,train_step,global_step,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal],feed_dict={onehot_words_pl:onehot_words[batch],word_pos_pl:word_pos[batch],perm_mat_pl:perm_mat[batch],sent_word_len_list_pl:sentence_lens_nwords[batch],sent_char_len_list_pl:sentence_lens_nchars[batch]})
