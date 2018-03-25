@@ -18,16 +18,17 @@ def preprocess(mode):
 	train_sentences = [x for x in train_sentences if x] 
 	val_sentences = [x for x in val_sentences if x] 
 	test_sentences = [x for x in test_sentences if x]
+	max_char_len = 494
 
 	if mode == "train":
 	    sentences = train_sentences
-	    max_char_len = 494
+	    #max_char_len = 494
 	elif mode == "val":
 	    sentences = val_sentences
-	    max_char_len = 356
+	    #max_char_len = 356
 	elif mode == "test":
 	    sentences = test_sentences
-	    max_char_len = 463
+	    #max_char_len = 463
 
 	sentences = [["<SOS>"] + word_tokenize(sentence.lower()) + ["<EOS>"] for sentence in sentences]
 
@@ -146,7 +147,7 @@ def run_preprocess(mode):
 	#produce embeddings 
 	data,eow_loc_all,sen_lens,num_words = embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index,max_char_len)
 
-	return data,eow_loc_all,sen_lens,num_words,vocabulary_size,index2token
+	return data,eow_loc_all,sen_lens,num_words,vocabulary_size,index2token,max_char_len
 
 def get_output_sentences(index2token,indices):
 	#indices of size (_,maxChar)

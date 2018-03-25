@@ -54,10 +54,10 @@ def permute_encoder_output(encoder_out, perm_mat, batch_size, max_word_len):
     return o
 
 def train(n_epochs,network_dict,**kwargs):
-    onehot_words,word_pos,sentence_lens_nchars,sentence_lens_nwords,vocabulary_size,token2index,max_char_len,index2token = encoder.run_preprocess(mode='train')
-    onehot_words_val,word_pos_val,sentence_lens_nchars_val,sentence_lens_nwords_val,vocabulary_size_val,_,_,_ = encoder.run_preprocess(mode='val')
+    onehot_words,word_pos,sentence_lens_nchars,sentence_lens_nwords,vocabulary_size,index2token,max_char_len = encoder.run_preprocess(mode='train')
+    onehot_words_val,word_pos_val,sentence_lens_nchars_val,sentence_lens_nwords_val,vocabulary_size_val,index2token_val,max_char_len = encoder.run_preprocess(mode='val')
 
-    max_char_len = kwargs['max_char_len']
+    #max_char_len = kwargs['max_char_len']
     batch_size = kwargs['batch_size']
     input_size = vocabulary_size
     hidden_size = kwargs['hidden_size']
@@ -94,6 +94,7 @@ def train(n_epochs,network_dict,**kwargs):
     #why do these all start at 0?
     # replace 0's possibly with len+1
     ## RELYING ON THERE BEING NOTHING AT ZEROS
+    #indice 0 problem?
     word_state_out.set_shape([max_char_len,batch_size,hidden_size])
     mean_state_out.set_shape([max_char_len,batch_size,hidden_size])
     logsig_state_out.set_shape([max_char_len,batch_size,hidden_size])
@@ -106,6 +107,7 @@ def train(n_epochs,network_dict,**kwargs):
     out_o, global_latent_o,global_logsig_o,global_mu_o = decoder.run_decoder(reuse=None,units_lstm_decoder=decoder_dim,lat_words=word_state_out_p,units_dense_global=decoder_dim,sequence_length=tf.cast(sent_char_len_list_pl,dtype=tf.int32))
 
     # shaping for batching
+    #reshape problem
     onehot_words = np.reshape(onehot_words,newshape=[-1,batch_size,max_char_len,vocabulary_size])
     word_pos = np.reshape(word_pos,newshape=[-1,batch_size,max_char_len])
     sentence_lens_nwords = np.reshape(sentence_lens_nwords,newshape=[-1,batch_size])
@@ -180,28 +182,28 @@ def train(n_epochs,network_dict,**kwargs):
         np.random.shuffle(inds)
         for count,batch in enumerate(inds):
             train_predictions_o_np, train_cost_o_np, _, global_step_o_np,train_rec_cost_o_np,_,_,_,_,anneal_constant=sess.run([out_o,cost,train_step,global_step,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal],feed_dict={onehot_words_pl:onehot_words[batch],word_pos_pl:word_pos[batch],perm_mat_pl:perm_mat[batch],sent_word_len_list_pl:sentence_lens_nwords[batch],sent_char_len_list_pl:sentence_lens_nchars[batch]})
-            print('train cost: {}'.format(train_cost_o_np))
-            if count %  ==0:
+            print('train cost: {}'.format(train_predictions_o_np))
+            if count % 1000:
                 # testing on the validation set
                 val_predictions_o_np, val_cost_o_np = sess.run(
                     [out_o_val, test_cost], feed_dict={onehot_words_pl_val: onehot_words_val[0], word_pos_pl_val: word_pos_val[0],
                                          perm_mat_pl_val: perm_mat_val[0], sent_word_len_list_pl_val: sentence_lens_nwords_val[0],
                                          sent_char_len_list_pl_val: sentence_lens_nchars_val[0]})
-                print('validation cost {}'.format(val_cost_o_np))
-            if count % 10000 ==0:
+                print('validation cost {}'.format(test_cost))
+            if count % 10000:
                 # testing on the generative model
                 gen_o_np = sess.run([gen_samples])
 
     sess.close()
 
-if __name__ =='__main__':
 
-    max_char_len = 494
-    batch_size = 52
-    hidden_size = 20
-    decoder_dim = 20
 
-    train_dict={'max_char_len':494,'batch_size':52,'hidden_size':20,'decoder_dim':20}
-    network_dict = {'max_char_len': max_char_len, 'batch_size': batch_size,'hidden_size': hidden_size}
+max_char_len = 494
+batch_size = 52
+hidden_size = 20
+decoder_dim = 20
 
-    train(n_epochs=1,network_dict=network_dict,**train_dict)
+train_dict={'max_char_len':494,'batch_size':52,'hidden_size':20,'decoder_dim':20}
+network_dict = {'max_char_len': max_char_len, 'batch_size': batch_size,'hidden_size': hidden_size}
+
+train(n_epochs=1,network_dict=network_dict,**train_dict)
