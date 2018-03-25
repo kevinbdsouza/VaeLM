@@ -16,12 +16,13 @@ def preprocess(mode,lang):
 
 	if (lang == "english"):
 
+		max_char_len = 494
 		if mode == "train":
-        	max_char_len = 494
+        	#max_char_len = 494
     	elif mode == "val":
-        	max_char_len = 356
+        	#max_char_len = 356
     	elif mode == "test":
-        	max_char_len = 463
+        	#max_char_len = 463
 
 		vocabulary = ["<SOS>"] + ["a"] + ["b"] + ["c"] + ["d"] + ["e"] + ["f"] + \
 		["g"] + ["h"] + ["i"] + ["j"] + ["k"] + ["l"] + ["m"] + ["n"] + ["o"] + \
@@ -32,12 +33,13 @@ def preprocess(mode,lang):
 
 	elif (lang == "spanish"):
 
+		max_char_len = 680
 		if mode == "train":
-        	max_char_len = 520
+        	#max_char_len = 520
     	elif mode == "val":
-        	max_char_len = 521
+        	#max_char_len = 521
     	elif mode == "test":
-        	max_char_len = 680
+        	#max_char_len = 680
 
 		vocabulary = ["<SOS>"] + ["a"] + ["á"] + ["ä"] + ["à"] + ["b"] + ["c"] + ["d"] + ["e"] + ["é"] + ["ê"] + \
 		["è"] + ["f"] + ["g"] + ["h"] + ["i"] + ["¡"] + ["ï"] + ["j"] + ["k"] + ["l"] + ["å"] + \
@@ -50,16 +52,17 @@ def preprocess(mode,lang):
 
 	elif (lang == "german"):
 
+		max_char_len = 616
 		if mode == "train":
-        	max_char_len = 604
+        	#max_char_len = 604
         	sentences.pop(23479)
 			sentences.pop(23479)
 			sentences.pop(23479)
 			sentences.pop(36324)
     	elif mode == "val":
-        	max_char_len = 560
+        	#max_char_len = 560
     	elif mode == "test":
-        	max_char_len = 616
+        	#max_char_len = 616
 		
 		vocabulary = ["<SOS>"] + ["a"] + ["ä"] + ["á"] + ["à"] + ["b"] + ["c"] + ["d"] + ["e"] + ["ê"] + ["é"] + ["è"] + \
 		["ë"] + ["f"] + ["g"] + ["h"] + ["i"] + ["¡"] + ["ï"] + ["j"] + ["k"] + ["l"] + \
@@ -72,14 +75,15 @@ def preprocess(mode,lang):
 
 	elif (lang == "russian"):
 
+		max_char_len = 626
 		if mode == "train":
-        	max_char_len = 624
+        	#max_char_len = 624
         	sentences.pop(3098)
 			sentences.pop(31275)
     	elif mode == "val":
-        	max_char_len = 556
+        	#max_char_len = 556
     	elif mode == "test":
-        	max_char_len = 626
+        	#max_char_len = 626
 
 		vocabulary = ["<SOS>"] + ["а"] + ["b"] + ["с"] + ["d"] + ["е"] + ["f"] + ["в"] + ["к"] + ["х"] + ["ё"] + \
 		["g"] + ["h"] + ["i"] + ["j"] + ["k"] + ["l"] + ["m"] + ["n"] + ["о"] + ["н"] + ["я"] + \
@@ -92,12 +96,13 @@ def preprocess(mode,lang):
 
 	elif (lang == "french"):
 
+		max_char_len = 673
 		if mode == "train":
-        	max_char_len = 524
+        	#max_char_len = 524
     	elif mode == "val":
-        	max_char_len = 567
+        	#max_char_len = 567
     	elif mode == "test":
-        	max_char_len = 673
+        	#max_char_len = 673
 
 		
 		vocabulary = ["<SOS>"] + ["a"] + ["ä"] + ["á"] + ["à"] + ["â"]+ ["b"] + ["c"] + ["d"] + ["e"] + ["ê"] + ["é"] + ["è"] + \
