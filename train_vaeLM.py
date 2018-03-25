@@ -189,7 +189,7 @@ def train(n_epochs,network_dict,**kwargs):
                     [out_o_val, test_cost], feed_dict={onehot_words_pl_val: onehot_words_val[0], word_pos_pl_val: word_pos_val[0],
                                          perm_mat_pl_val: perm_mat_val[0], sent_word_len_list_pl_val: sentence_lens_nwords_val[0],
                                          sent_char_len_list_pl_val: sentence_lens_nchars_val[0]})
-                print('validation cost {}'.format(out_o_val))
+                print('validation cost {}'.format(test_cost))
             if count % 10000:
                 # testing on the generative model
                 gen_o_np = sess.run([gen_samples])
