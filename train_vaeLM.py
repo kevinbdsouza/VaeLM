@@ -183,14 +183,14 @@ def train(n_epochs,network_dict,**kwargs):
         for count,batch in enumerate(inds):
             train_predictions_o_np, train_cost_o_np, _, global_step_o_np,train_rec_cost_o_np,_,_,_,_,anneal_constant=sess.run([out_o,cost,train_step,global_step,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal],feed_dict={onehot_words_pl:onehot_words[batch],word_pos_pl:word_pos[batch],perm_mat_pl:perm_mat[batch],sent_word_len_list_pl:sentence_lens_nwords[batch],sent_char_len_list_pl:sentence_lens_nchars[batch]})
             print('train cost: {}'.format(train_cost_o_np))
-            if count % 1000:
+            if (count % 10 == 0):
                 # testing on the validation set
                 val_predictions_o_np, val_cost_o_np = sess.run(
                     [out_o_val, test_cost], feed_dict={onehot_words_pl_val: onehot_words_val[0], word_pos_pl_val: word_pos_val[0],
                                          perm_mat_pl_val: perm_mat_val[0], sent_word_len_list_pl_val: sentence_lens_nwords_val[0],
                                          sent_char_len_list_pl_val: sentence_lens_nchars_val[0]})
                 print('validation cost {}'.format(val_cost_o_np))
-            if count % 10000:
+            if (count % 100 == 0):
                 # testing on the generative model
                 gen_o_np = sess.run([gen_samples])
 
@@ -203,7 +203,7 @@ batch_size = 52
 hidden_size = 20
 decoder_dim = 20
 
-train_dict={'max_char_len':494,'batch_size':52,'hidden_size':20,'decoder_dim':20}
+train_dict={'max_char_len':494,'batch_size':52,'hidden_size':hidden_size,'decoder_dim':decoder_dim}
 network_dict = {'max_char_len': max_char_len, 'batch_size': batch_size,'hidden_size': hidden_size}
 
 train(n_epochs=1,network_dict=network_dict,**train_dict)

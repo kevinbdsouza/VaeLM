@@ -136,7 +136,8 @@ class Decoder:
             anneal_c = tf.cast(tf.minimum(tf.maximum(tf.divide((global_step-shift),total_steps),0),1),dtype=tf.float32)
             kl_p3 = kl_p3*anneal_c
         else:
-            kl_p3 = 0
+            anneal_c = 0
+            kl_p3 = tf.cast(0,dtype=tf.float32)
         #sum over all seperate KLs for each lat var
 
         cost = tf.reduce_mean(kl_p3+tf.reduce_sum(reconstruction,-1))
