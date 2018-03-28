@@ -50,11 +50,18 @@ def permute_encoder_output(encoder_out, perm_mat, batch_size, max_word_len):
     o = tf.stack([tf.gather(params=i, indices=j, axis=0) for i, j in zip(tf.unstack(o, axis=0), tf.unstack(perm_mat,axis=0))])
     return o
 
-def train(n_epochs,network_dict,**kwargs):
-    onehot_words,word_pos,sentence_lens_nchars,sentence_lens_nwords,vocabulary_size,index2token,max_char_len = encoder.run_preprocess(mode='train')
-    onehot_words_val,word_pos_val,sentence_lens_nchars_val,sentence_lens_nwords_val,vocabulary_size_val,index2token_val,max_char_len = encoder.run_preprocess(mode='val')
+def train(n_epochs,network_dict,index2token,**kwargs):
+    onehot_words=kwargs['onehot_words']
+    word_pos=kwargs['word_pos']
+    sentence_lens_nchars=kwargs['sentence_lens_nchars']
+    sentence_lens_nwords=kwargs['sentence_lens_nwords']
+    vocabulary_size=kwargs['vocabulary_size']
+    max_char_len =kwargs['max_char_len']
+    onehot_words_val =kwargs['onehot_words_val']
+    word_pos_val =kwargs['word_pos_val']
+    sentence_lens_nchars_val=kwargs['sentence_lens_nchars_val']
+    sentence_lens_nwords_val=kwargs['sentence_lens_nwords_val']
 
-    #max_char_len = kwargs['max_char_len']
     batch_size = kwargs['batch_size']
     input_size = vocabulary_size
     hidden_size = kwargs['hidden_size']

@@ -1,16 +1,11 @@
 import encoder
 import h5py
 import numpy as np
+from sys import argv
 
 
-onehot_words,word_pos,sentence_lens_nchars,sentence_lens_nwords,vocabulary_size,index2token,max_char_len = encoder.run_preprocess(mode='train')
-onehot_words_val,word_pos_val,sentence_lens_nchars_val,sentence_lens_nwords_val,vocabulary_size_val,index2token_val,max_char_len = encoder.run_preprocess(mode='val')
-
-
-l_train = [onehot_words,word_pos,sentence_lens_nchars,sentence_lens_nwords,vocabulary_size,index2token,max_char_len]
-l_val = [onehot_words_val,word_pos_val,sentence_lens_nchars_val,sentence_lens_nwords_val,vocabulary_size_val,index2token_val,max_char_len]
-
-def write(file,l_train):
+def write(file,list_inp):
+    onehot_words, word_pos, sentence_lens_nchars, sentence_lens_nwords, vocabulary_size, index2token,max_char_len = list_inp
 	with h5py.File(file, "w") as f:
 		g_train = f.create_group('train_group')
 
@@ -33,7 +28,7 @@ def write(file,l_train):
 
 
 
-def read(file,num_arg,train=True):
+def read(file,train=True):
 
 	list_inp=[]
 	with h5py.File(file, "r") as f:
@@ -64,10 +59,17 @@ def read(file,num_arg,train=True):
 	return list_inp
 
 
+if __name__='__main__':
 
-write("preprocess.py",l_train)
+    #python arguments expected from argv, i.e. just the name of the file and directory train_file.h5, valid_file.h5
 
-list_inp = read("preprocess.py",7)
+    onehot_words, word_pos, sentence_lens_nchars, sentence_lens_nwords, vocabulary_size, index2token, max_char_len = encoder.run_preprocess(mode='train')
+    onehot_words_val, word_pos_val, sentence_lens_nchars_val, sentence_lens_nwords_val, vocabulary_size_val, index2token_val, max_char_len = encoder.run_preprocess(mode='val')
 
-print(list_inp[5])
+    l_train = [onehot_words, word_pos, sentence_lens_nchars, sentence_lens_nwords, vocabulary_size, index2token,
+               max_char_len]
+    l_val = [onehot_words_val, word_pos_val, sentence_lens_nchars_val, sentence_lens_nwords_val, vocabulary_size_val,
+             index2token_val, max_char_len]
 
+    write(file=argv[-2],l_train)
+    write(file=argv[-1], l_val)
