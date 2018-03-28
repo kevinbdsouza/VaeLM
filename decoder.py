@@ -116,7 +116,7 @@ class Decoder:
             cell = tf.contrib.rnn.LSTMCell(num_units)
             values, _ = tf.nn.dynamic_rnn(cell=cell,inputs=values,sequence_length=word_lens,dtype=tf.float32)
         with tf.variable_scope('prior/rnn', reuse=reuse):
-            mu,log_sig = tf.split(tf.layers.dense(inputs=values,activation=None,units=self.lat_word_dim*2),axis=-1,num_or_size_splits=2)
+            mu,log_sig = tf.split(tf.layers.dense(inputs=values,activation=None,units=self.lat_word_dim*2),axis=-1,num_or_size_splits=2,name='prior_dense')
         return [mu,log_sig]
 
     def cost_function(self,predictions,true_input,global_mu,global_logsig,prior_mu,prior_logsig,posterior_mu,posterior_logsig,shift,total_steps,global_step,kl=True):
@@ -136,8 +136,8 @@ class Decoder:
             anneal_c = tf.cast(tf.minimum(tf.maximum(tf.divide((global_step-shift),total_steps),0),1),dtype=tf.float32)
             kl_p3 = kl_p3*anneal_c
         else:
-            anneal_c = 0
-            kl_p3 = tf.cast(0,dtype=tf.float32)
+            anneal_c=0
+            kl_p3 = tf.constant(0,dtype=tf.float32)
         #sum over all seperate KLs for each lat var
 
         cost = tf.reduce_mean(kl_p3+tf.reduce_sum(reconstruction,-1))
@@ -157,9 +157,9 @@ class Decoder:
         cost = tf.reduce_mean(kl_p3+tf.reduce_sum(reconstruction,-1))
         return cost,reconstruction,kl_p3,kl_p1
 
-    def calc_cost(self,posterior_logsig,post_samples,global_mu,global_logsig,global_latent_sample,posterior_mu,true_input,sentence_word_lens,predictions,shift, total_steps, global_step,reuse):
+    def calc_cost(self,kl,posterior_logsig,post_samples,global_mu,global_logsig,global_latent_sample,posterior_mu,true_input,sentence_word_lens,predictions,shift, total_steps, global_step,reuse):
         prior_mu,prior_logsig = self.prior(values=post_samples,num_units=self.units_encoder_lstm,global_latent=global_latent_sample,word_lens=sentence_word_lens,reuse=reuse)
-        cost, reconstruction, kl_p3, kl_p1,kl_global,kl_p2,anneal_c= self.cost_function(predictions=predictions,true_input=true_input,global_mu=global_mu,global_logsig=global_logsig,prior_mu=prior_mu,prior_logsig=prior_logsig,posterior_mu=posterior_mu,posterior_logsig=posterior_logsig,shift=shift, total_steps=total_steps, global_step=global_step)
+        cost, reconstruction, kl_p3, kl_p1,kl_global,kl_p2,anneal_c= self.cost_function(kl=kl,predictions=predictions,true_input=true_input,global_mu=global_mu,global_logsig=global_logsig,prior_mu=prior_mu,prior_logsig=prior_logsig,posterior_mu=posterior_mu,posterior_logsig=posterior_logsig,shift=shift, total_steps=total_steps, global_step=global_step)
         return cost,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal_c
 
     def test_calc_cost(self,posterior_logsig,post_samples,global_mu,global_logsig,global_latent_sample,posterior_mu,true_input,predictions,sentence_word_lens):
@@ -185,7 +185,7 @@ class Decoder:
 
                 else:
                     next_cell_state = cell_state
-                    p1 = tf.layers.dense(inputs=cell_output,units=self.lat_word_dim*2,activation=None)
+                    p1 = tf.layers.dense(inputs=cell_output,units=self.lat_word_dim*2,activation=None,name='prior_dense')
                     mu, logsig = tf.split(p1,axis=-1,num_or_size_splits=2)
                     eps = tf.random_normal(shape=[self.batch_size,self.lat_word_dim],dtype=tf.float32)
                     samples_word = eps*tf.exp(logsig)+mu
