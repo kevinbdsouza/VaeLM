@@ -110,7 +110,8 @@ class Decoder:
     def prior(self, values,num_units,global_latent,word_lens,reuse):
         global_latent= tf.transpose(tf.stack([global_latent for _ in range(self.max_num_words)]),[1,0,2])
         print(' PRIOR input dim from post {}'.format(values))
-        values = tf.concat([tf.zeros(shape=[self.batch_size, self.lat_word_dim], dtype=tf.float32),values],axis=0)
+        values = tf.concat([tf.zeros(shape=[self.batch_size,1, self.lat_word_dim], dtype=tf.float32),values],axis=1)
+        values = values[:,0:-1,:]
         values = tf.concat([tf.cast(values,dtype=tf.float32),global_latent],axis=-1)
         print('PRIOR input dim to prior {}'.format(values))
         with tf.variable_scope('prior',reuse=reuse):
