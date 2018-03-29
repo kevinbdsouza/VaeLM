@@ -207,7 +207,7 @@ class Encoder:
 		        mean_loop_state = mean_ta
 		        sigma_loop_state = sigma_ta
 		        next_loop_state = (sample_loop_state,mean_loop_state,sigma_loop_state)
-		        next_input = tf.zeros(shape=[self.batch_size,self.input_size],dtype=tf.float32)
+		        #next_input = tf.zeros(shape=[self.batch_size,self.input_size],dtype=tf.float32)
 
 		    else:
 		        word_slice = tf.tile(word_pos[:,time-1],[self.hidden_size])
@@ -237,9 +237,9 @@ class Encoder:
 		        next_cell_state = next_cell_state + tf.multiply(cell_state[0],word_slice)
 		        next_cell_state = tf.contrib.rnn.LSTMStateTuple(next_cell_state,cell_output)
 
-		        next_input = _inputs_ta.read(time-1)
-
-		    
+		        
+		    next_input = tf.cond(time < self.max_char_len,lambda: _inputs_ta.read(time),lambda: tf.zeros(shape=[self.batch_size,self.input_size],dtype=tf.float32))
+		    	
 		    elements_finished = (time >= (self.max_char_len))
 		    
 
@@ -256,14 +256,16 @@ class Encoder:
 		return word_state_out,mean_state_out,sigma_state_out
 
 
-#data,eow_loc_all = run_preprocess()
-#print(len(data))
 
-'''
-if __init__ == "__main__": 
+
+
+if __name__ == "__main__": 
+
+	data,eow_loc_all,_,_,_,_ = run_preprocess(mode="train")
+	print(len(data))
 	max_char_len = 494
 	batch_size = 52
-	input_size = vocabulary_size
+	input_size = 61
 	hidden_size = 20
 	num_batches = len(data) // batch_size
 	arg_dict = {'max_char_len':max_char_len,'batch_size':batch_size,'input_size':input_size,'hidden_size':hidden_size}
@@ -273,7 +275,7 @@ if __init__ == "__main__":
 	inputs = tf.placeholder(tf.float32,[batch_size,max_char_len,input_size])
 	word_pos = tf.placeholder(tf.float32,[batch_size,max_char_len])
 
-	word_state_out,mean_state_out,sigma_state_out = encoder.run_encoder(inputs,word_pos)
+	word_state_out,mean_state_out,sigma_state_out = encoder.run_encoder(inputs,word_pos,reuse=None)
 
 	#example
 	init_op = tf.global_variables_initializer()
@@ -290,4 +292,3 @@ if __init__ == "__main__":
 	                                                                                                                 
 	            print(mean_state)
 
-'''
