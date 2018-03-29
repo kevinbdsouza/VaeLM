@@ -207,6 +207,7 @@ class Encoder:
 		        mean_loop_state = mean_ta
 		        sigma_loop_state = sigma_ta
 		        next_loop_state = (sample_loop_state,mean_loop_state,sigma_loop_state)
+		        next_input = tf.zeros(shape=[self.batch_size,self.input_size],dtype=tf.float32)
 
 		    else:
 		        word_slice = tf.tile(word_pos[:,time-1],[self.hidden_size])
@@ -236,8 +237,10 @@ class Encoder:
 		        next_cell_state = next_cell_state + tf.multiply(cell_state[0],word_slice)
 		        next_cell_state = tf.contrib.rnn.LSTMStateTuple(next_cell_state,cell_output)
 
-		    next_input = _inputs_ta.read(time)
-		    elements_finished = (time >= (self.max_char_len-1))
+		        next_input = _inputs_ta.read(time-1)
+
+		    
+		    elements_finished = (time >= (self.max_char_len))
 		    
 
 		    return (elements_finished, next_input, next_cell_state, emit_output, next_loop_state)
