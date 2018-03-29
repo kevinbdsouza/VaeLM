@@ -4,9 +4,10 @@ import numpy as np
 from sys import argv
 
 
-def write(file,list_inp):
+def write(file_name,list_inp):
     onehot_words, word_pos, sentence_lens_nchars, sentence_lens_nwords, vocabulary_size, index2token,max_char_len = list_inp
-    with h5py.File(file, "w") as f:
+
+    with h5py.File(file_name+'train.h5', "w") as f:
         g_train = f.create_group('train_group')
         g_train['onehot_words'] = onehot_words
         g_train['word_pos'] = word_pos
@@ -26,11 +27,10 @@ def write(file,list_inp):
         g_val['max_char_len'] = max_char_len
 
 
-
-def read(file,train=True):
+def read(file_name,train=True):
 
     list_inp=[]
-    with h5py.File(file, "r") as f:
+    with h5py.File(file_name, "r") as f:
         if train:
             g_train = f.get('train_group')
 
@@ -55,10 +55,8 @@ def read(file,train=True):
 
     #onehot_words,word_pos,sentence_lens_nchars,sentence_lens_nwords,vocabulary_size,index2token,max_char_len = list_inp
 
-	return list_inp
-
-
-if __name__='__main__':
+    return list_inp
+if __name__=='__main__':
 
     #python arguments expected from argv, i.e. just the name of the file and directory train_file.h5, valid_file.h5
 
@@ -70,5 +68,5 @@ if __name__='__main__':
     l_val = [onehot_words_val, word_pos_val, sentence_lens_nchars_val, sentence_lens_nwords_val, vocabulary_size_val,
              index2token_val, max_char_len]
 
-    write(file=argv[-2],l_train)
-    write(file=argv[-1], l_val)
+    write(file=argv[-2],list_inp=l_train)
+    write(file=argv[-1], list_inp=l_val)
