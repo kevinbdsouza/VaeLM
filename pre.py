@@ -68,5 +68,5 @@ if __name__=='__main__':
     l_val = [onehot_words_val, word_pos_val, sentence_lens_nchars_val, sentence_lens_nwords_val, vocabulary_size_val,
              index2token_val, max_char_len]
 
-    write(file=argv[-2],list_inp=l_train)
-    write(file=argv[-1], list_inp=l_val)
+    write(file_name=argv[-2],list_inp=l_train)
+    write(file_name=argv[-1], list_inp=l_val)
