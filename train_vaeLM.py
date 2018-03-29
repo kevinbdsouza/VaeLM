@@ -189,10 +189,10 @@ def train(n_epochs,network_dict,index2token,**kwargs):
             predictions = np.argmax(train_predictions_o_np[0:10],axis=-1)
             ground_truth = np.argmax(onehot_words[batch][0:10], axis=-1)
 
-            print('ground truth {}'.format(get_output_sentences(index2token, ground_truth[0:10])))
-            print('predictions {}'.format(get_output_sentences(index2token, predictions[0:10])))
-            #print('predictions {}'.format([[index2token[j] for j in i] for i in predictions]))
-            #print('ground truth {}'.format([[index2token[j] for j in i] for i in ground_truth]))
+            #print('ground truth {}'.format(get_output_sentences(index2token, ground_truth[0:10])))
+            #print('predictions {}'.format(get_output_sentences(index2token, predictions[0:10])))
+            print('predictions {}'.format([[index2token[j] for j in i] for i in predictions]))
+            print('ground truth {}'.format([[index2token[j] for j in i] for i in ground_truth]))
 
             print('train cost: {}'.format(train_cost_o_np))
             if count % 1000:
@@ -208,4 +208,36 @@ def train(n_epochs,network_dict,index2token,**kwargs):
 
     sess.close()
 
+if __main__=='__name__':
+    onehot_words, word_pos, sentence_lens_nchars, sentence_lens_nwords, vocabulary_size, max_char_len,index2token = encoder.run_preprocess(
+        mode='train')
+    onehot_words_val, word_pos_val, sentence_lens_nchars_val, sentence_lens_nwords_val, _, _,_ = encoder.run_preprocess(
+        mode='val')
 
+    max_char_len = 494
+    batch_size = 52
+    hidden_size = 20
+    decoder_dim = 20
+    vocabulary = ["<SOS>"] + ["a"] + ["b"] + ["c"] + ["d"] + ["e"] + ["f"] + \
+                 ["g"] + ["h"] + ["i"] + ["j"] + ["k"] + ["l"] + ["m"] + ["n"] + ["o"] + \
+                 ["p"] + ["q"] + ["r"] + ["s"] + ["t"] + ["u"] + ["v"] + ["w"] + \
+                 ["x"] + ["y"] + ["z"] + ["<EOW>"] + ["<EOS>"] + [">"] + ["-"] + ["."] + ["'"] + ["0"] + ["1"] + [
+                     "2"] + ["3"] + \
+                 ["4"] + ["5"] + ["6"] + ["7"] + ["8"] + ["9"] + ["&"] + ["<"] + ["$"] + ["#"] + ["/"] + [","] + ["|"] + \
+                 ["@"] + ["%"] + ["^"] + ["\\"] + ["*"] + ["("] + [")"] + ["{"] + ["}"] + [":"] + [";"]
+
+    vocabulary_size = len(vocabulary)
+    # token2index = {token:index for index,token in enumerate(vocabulary)}
+    index2token = {index: token for index, token in enumerate(vocabulary)}
+
+    train_dict = {'batch_size': 52, 'hidden_size': hidden_size, 'decoder_dim': decoder_dim,
+                  'max_char_len': max_char_len,
+                  'onehot_words': onehot_words, 'word_pos': word_pos, 'sentence_lens_nchars': sentence_lens_nchars,
+                  'vocabulary_size': vocabulary_size, 'sentence_lens_nwords': sentence_lens_nwords,
+                  'onehot_words_val': onehot_words_val, 'word_pos_val': word_pos_val,
+                  'sentence_lens_nchars_val': sentence_lens_nchars_val,
+                  'sentence_lens_nwords_val': sentence_lens_nwords_val}
+
+    network_dict = {'max_char_len': max_char_len, 'batch_size': batch_size, 'hidden_size': hidden_size}
+
+    train(n_epochs=1, network_dict=network_dict, index2token=index2token, **train_dict)

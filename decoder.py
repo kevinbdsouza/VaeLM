@@ -118,7 +118,12 @@ class Decoder:
             cell = tf.contrib.rnn.LSTMCell(num_units)
             values, _ = tf.nn.dynamic_rnn(cell=cell,inputs=values,sequence_length=word_lens,dtype=tf.float32)
         with tf.variable_scope('prior/rnn', reuse=reuse):
-            mu,log_sig = tf.split(tf.layers.dense(inputs=values,activation=None,units=self.lat_word_dim*2),axis=-1,num_or_size_splits=2,name='prior_dense')
+            w = tf.get_variable(name='prior_dense_w',shape=[self.lat_word_dim,self.lat_word_dim*2],dtype=tf.float32)
+            b = tf.get_variable(name='prior_dense_b',shape=self.lat_word_dim*2,dtype=tf.float32)
+            out = tf.reshape(tf.matmul(tf.reshape(values,[-1,self.lat_word_dim]),w)+b,[self.batch_size,self.max_num_words,self.lat_word_dim*2])
+
+            mu,log_sig = tf.split(out,axis=-1,num_or_size_splits=2,name='prior_dense')
+            print('MU{}'.format(mu))
         return [mu,log_sig]
 
     def cost_function(self,predictions,true_input,global_mu,global_logsig,prior_mu,prior_logsig,posterior_mu,posterior_logsig,shift,total_steps,global_step,kl=True):
@@ -187,8 +192,13 @@ class Decoder:
 
                 else:
                     next_cell_state = cell_state
-                    p1 = tf.layers.dense(inputs=cell_output,units=self.lat_word_dim*2,activation=None,name='prior_dense')
-                    mu, logsig = tf.split(p1,axis=-1,num_or_size_splits=2)
+                    w = tf.get_variable(name='prior_dense_w')
+                    b = tf.get_variable(name='prior_dense_b')
+                    print(cell_output)
+                    cell_output = tf.reshape(tf.matmul(cell_output, w) + b,[self.batch_size,self.lat_word_dim * 2])
+
+
+                    mu, logsig = tf.split(cell_output,axis=-1,num_or_size_splits=2)
                     eps = tf.random_normal(shape=[self.batch_size,self.lat_word_dim],dtype=tf.float32)
                     samples_word = eps*tf.exp(logsig)+mu
 
