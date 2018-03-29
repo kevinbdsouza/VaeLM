@@ -147,7 +147,7 @@ def run_preprocess(mode):
 	#produce embeddings 
 	data,eow_loc_all,sen_lens,num_words = embed_producer(sentences,vocabulary_size,max_word_length,one_hot_embeddings,token2index,max_char_len)
 
-	return data,eow_loc_all,sen_lens,num_words,vocabulary_size,index2token,max_char_len
+	return data,eow_loc_all,sen_lens,num_words,vocabulary_size,max_char_len
 
 def get_output_sentences(index2token,indices):
 	#indices of size (_,maxChar)
