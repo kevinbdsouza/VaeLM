@@ -37,7 +37,7 @@ def experiment(exp_name):
 	index2token = {index:token for index,token in enumerate(vocabulary)}
 
 
-	train_dict = {'batch_size': 52, 'hidden_size': hidden_size, 'decoder_dim': decoder_dim, 'max_char_len': max_char_len,'onehot_words': onehot_words, 'word_pos': word_pos, 'sentence_lens_nchars': sentence_lens_nchars,'vocabulary_size': vocabulary_size, 'sentence_lens_nwords': sentence_lens_nwords,'onehot_words': onehot_words_val, 'word_pos': word_pos_val,'sentence_lens_nchars': sentence_lens_nchars_val, 'sentence_lens_nwords_val': sentence_lens_nwords_val}
+	train_dict = {'batch_size': 52, 'hidden_size': hidden_size, 'decoder_dim': decoder_dim, 'max_char_len': max_char_len,'onehot_words': onehot_words, 'word_pos': word_pos, 'sentence_lens_nchars': sentence_lens_nchars,'vocabulary_size': vocabulary_size, 'sentence_lens_nwords': sentence_lens_nwords,'onehot_words_val': onehot_words_val, 'word_pos_val': word_pos_val,'sentence_lens_nchars_val': sentence_lens_nchars_val, 'sentence_lens_nwords_val': sentence_lens_nwords_val}
 
 	network_dict = {'max_char_len': max_char_len, 'batch_size': batch_size,'hidden_size': hidden_size}
 
