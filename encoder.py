@@ -236,8 +236,9 @@ class Encoder:
 		        next_cell_state = next_cell_state + tf.multiply(cell_state[0],word_slice)
 		        next_cell_state = tf.contrib.rnn.LSTMStateTuple(next_cell_state,cell_output)
 
-		    elements_finished = (time >= (self.max_char_len)-1)
 		    next_input = _inputs_ta.read(time)
+		    elements_finished = (time >= (self.max_char_len-1))
+		    
 
 		    return (elements_finished, next_input, next_cell_state, emit_output, next_loop_state)
 
