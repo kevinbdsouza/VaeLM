@@ -130,14 +130,30 @@ class Decoder:
         reconstruction = tf.reduce_sum(tf.reduce_sum(-true_input*tf.log(predictions+1e-9),axis=-1),-1)
         #have to be very careful of order of the mean/stddev parmeters
         #outer reduce sum for each KL term
+        '''
         kl_p1 = 0.5 * (tf.reduce_sum(tf.exp(posterior_logsig - prior_logsig), axis=-1) + tf.reduce_sum(
             (posterior_mu - prior_mu) * tf.divide(1, tf.exp(prior_logsig)) * (posterior_mu - prior_mu),
             axis=-1) - tf.cast(tf.shape(posterior_mu)[-1], dtype=tf.float32) + tf.reduce_sum(
             (prior_logsig - posterior_logsig), axis=-1))
+        '''
+
+        kl_p1 = 0.5 * (tf.reduce_sum(tf.reduce_sum(prior_logsig,axis=1) - tf.reduce_sum(posterior_logsig,axis=1),axis=-1) - 
+            tf.cast(tf.shape(posterior_mu)[-1], dtype=tf.float32) * tf.cast(tf.shape(prior_mu)[1],dtype=tf.float32) + 
+            tf.reduce_sum(tf.reduce_sum(tf.divide(1,tf.exp(prior_logsig)) * tf.exp(posterior_logsig),axis=-1) +  tf.reduce_sum(
+            (posterior_mu - prior_mu) * tf.divide(1, tf.exp(prior_logsig)) * (posterior_mu - prior_mu),
+            axis=-1),axis=-1))
+
+        '''
         kl_global_lat = 0.5 * (
         tf.reduce_sum(tf.exp(global_logsig), axis=-1) + tf.reduce_sum((global_mu * global_mu), axis=-1) - tf.cast(
             tf.shape(global_mu)[-1], dtype=tf.float32) - tf.reduce_sum(global_logsig))
-        kl_p2 = tf.reduce_sum(kl_p1, -1)
+        '''
+
+        kl_global_lat = 0.5 * (-tf.reduce_sum(global_logsig,axis=-1) - tf.cast(tf.shape(global_mu)[-1],dtype=tf.float32) + tf.reduce_sum(
+            tf.exp(global_logsig),axis=-1) + tf.reduce_sum((global_mu * global_mu), axis=-1))
+
+        kl_p2 = kl_p1
+        #kl_p2 = tf.reduce_sum(kl_p1, -1)
         if kl:
             kl_p3 = kl_p2 + kl_global_lat
             anneal_c = tf.cast(tf.minimum(tf.maximum(tf.divide((global_step-shift),total_steps),0),1),dtype=tf.float32)
@@ -167,16 +183,16 @@ class Decoder:
     def calc_cost(self,kl,posterior_logsig,post_samples,global_mu,global_logsig,global_latent_sample,posterior_mu,true_input,sentence_word_lens,predictions,shift, total_steps, global_step,reuse):
         prior_mu,prior_logsig = self.prior(values=post_samples,num_units=self.units_encoder_lstm,global_latent=global_latent_sample,word_lens=sentence_word_lens,reuse=reuse)
         cost, reconstruction, kl_p3, kl_p1,kl_global,kl_p2,anneal_c= self.cost_function(kl=kl,predictions=predictions,true_input=true_input,global_mu=global_mu,global_logsig=global_logsig,prior_mu=prior_mu,prior_logsig=prior_logsig,posterior_mu=posterior_mu,posterior_logsig=posterior_logsig,shift=shift, total_steps=total_steps, global_step=global_step)
-	self.kls_hist = tf.summary.histogram('kls',tf.reduce_mean(kl_p1,0))
-	self.global_kl_scalar = tf.summary.scalar('kls_global',tf.reduce_mean(kl_global))
-	self.rec_scalar = tf.summary.scalar('rec',tf.reduce_mean(reconstruction))
-	self.cost_scalar = tf.summary.scalar('full_cost',cost)
-	var_all = tf.nn.moments(x=posterior_mu,axes=0)
-	var_all=var_all[-1]
-	kl = tf.reduce_mean(kl_p3)
+    	self.kls_hist = tf.summary.histogram('kls',tf.reduce_mean(kl_p1,0))
+    	self.global_kl_scalar = tf.summary.scalar('kls_global',tf.reduce_mean(kl_global))
+    	self.rec_scalar = tf.summary.scalar('rec',tf.reduce_mean(reconstruction))
+    	self.cost_scalar = tf.summary.scalar('full_cost',cost)
+    	var_all = tf.nn.moments(x=posterior_mu,axes=0)
+    	var_all=var_all[-1]
+    	kl = tf.reduce_mean(kl_p3)
 
-	self.full_kl_scalar = tf.summary.scalar('full_kl',kl)
-	self.sum_all_activ_hist = tf.summary.histogram('active_lats_all', var_all)
+    	self.full_kl_scalar = tf.summary.scalar('full_kl',kl)
+    	self.sum_all_activ_hist = tf.summary.histogram('active_lats_all', var_all)
         var_g = tf.nn.moments(x=global_mu, axes=0)
         var_g = var_g[-1]
         self.sum_global_activ_hist = tf.summary.histogram('active_lats_global', var_g)
