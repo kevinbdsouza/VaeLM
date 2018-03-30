@@ -156,7 +156,7 @@ def get_output_sentences(index2token,indices):
 	for sample in range(len(indices)):
 		sentence = []
 		sen = indices[sample]
-		for char in range(len(a[sample])):
+		for char in range(len(sen)):
 		    if (index2token.get(sen[char]) == "<SOS>"):
 		        sentence.append("")
 		    elif (index2token.get(sen[char]) == "<EOS>"):
