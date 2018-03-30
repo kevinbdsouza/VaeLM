@@ -1,3 +1,4 @@
+import logging
 from decoder import Decoder
 import encoder
 import tensorflow as tf
@@ -50,7 +51,7 @@ def permute_encoder_output(encoder_out, perm_mat, batch_size, max_word_len):
     o = tf.stack([tf.gather(params=i, indices=j, axis=0) for i, j in zip(tf.unstack(o, axis=0), tf.unstack(perm_mat,axis=0))])
     return o
 
-def train(n_epochs,network_dict,index2token,**kwargs):
+def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     onehot_words=kwargs['onehot_words']
     word_pos=kwargs['word_pos']
     sentence_lens_nchars=kwargs['sentence_lens_nchars']
@@ -134,18 +135,18 @@ def train(n_epochs,network_dict,index2token,**kwargs):
     total_steps = np.round(np.true_divide(n_epochs,2)*np.shape(onehot_words)[0],decimals=0)
 
     ####
-    cost,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal = decoder.calc_cost(kl=False,sentence_word_lens=sent_word_len_list_pl,shift=shift,total_steps=total_steps,global_step=global_step,global_latent_sample=global_latent_o,global_logsig=global_logsig_o,global_mu=global_mu_o,predictions=out_o,true_input=onehot_words_pl,posterior_logsig=logsig_state_out_p,posterior_mu=mean_state_out_p,post_samples=word_state_out_p,reuse=None)
+    cost,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal = decoder.calc_cost(kl=True,sentence_word_lens=sent_word_len_list_pl,shift=shift,total_steps=total_steps,global_step=global_step,global_latent_sample=global_latent_o,global_logsig=global_logsig_o,global_mu=global_mu_o,predictions=out_o,true_input=onehot_words_pl,posterior_logsig=logsig_state_out_p,posterior_mu=mean_state_out_p,post_samples=word_state_out_p,reuse=None)
 
     ######
     # Train Step
 
     # clipping gradients
     ######
-    lr = 1e-3
+    lr = 1e-4
     opt = tf.train.AdamOptimizer(lr)
     grads_t, vars_t = zip(*opt.compute_gradients(cost))
     clipped_grads_t, grad_norm_t = tf.clip_by_global_norm(grads_t, clip_norm=10.0)
-    train_step = opt.apply_gradients(zip(grads_t, vars_t), global_step=global_step)
+    train_step = opt.apply_gradients(zip(clipped_grads_t, vars_t), global_step=global_step)
     ######
     #testing stuff
     #testing pls
@@ -181,63 +182,44 @@ def train(n_epochs,network_dict,index2token,**kwargs):
     sess.run(tf.global_variables_initializer())
 
     ######
+    #tensorboard stuff
+    summary_inf_train = tf.summary.merge([decoder.kls_hist,decoder.global_kl_scalar,decoder.rec_scalar,decoder.cost_scalar,decoder.full_kl_scalar,decoder.sum_all_activ_hist,decoder.sum_global_activ_hist])
+    summary_writer = tf.summary.FileWriter(log_dir, sess.graph)
+    ######
+    log_file = log_dir + "vaelog.txt"
+    logger = logging.getLogger('mVAE_log')
+    hdlr = logging.FileHandler(log_file)
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.DEBUG)
     for epoch in range(n_epochs):
         inds = range(np.shape(onehot_words)[0])
         np.random.shuffle(inds)
         for count,batch in enumerate(inds):
-            train_predictions_o_np, train_cost_o_np, _, global_step_o_np,train_rec_cost_o_np,_,_,_,_=sess.run([out_o,cost,train_step,global_step,reconstruction,kl_p3,kl_p1,kl_global,kl_p2],feed_dict={onehot_words_pl:onehot_words[batch],word_pos_pl:word_pos[batch],perm_mat_pl:perm_mat[batch],sent_word_len_list_pl:sentence_lens_nwords[batch],sent_char_len_list_pl:sentence_lens_nchars[batch]})
+            train_predictions_o_np, train_cost_o_np, _, global_step_o_np,train_rec_cost_o_np,_,_,_,_,anneal_c,summary_inf_train_o=sess.run([out_o,cost,train_step,global_step,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal,summary_inf_train],feed_dict={onehot_words_pl:onehot_words[batch],word_pos_pl:word_pos[batch],perm_mat_pl:perm_mat[batch],sent_word_len_list_pl:sentence_lens_nwords[batch],sent_char_len_list_pl:sentence_lens_nchars[batch]})
             predictions = np.argmax(train_predictions_o_np[0:10],axis=-1)
             ground_truth = np.argmax(onehot_words[batch][0:10], axis=-1)
+	    logger.debug('anneal const {}'.format(anneal_c))
+            #logger.debug('ground truth {}'.format(get_output_sentences(index2token, ground_truth[0:10])))
+            #logger.debug('predictions {}'.format(get_output_sentences(index2token, predictions[0:10])))
+            logger.debug('predictions {}'.format([[index2token[j] for j in i] for i in predictions]))
+            logger.debug('ground truth {}'.format([[index2token[j] for j in i] for i in ground_truth]))
 
-            #print('ground truth {}'.format(get_output_sentences(index2token, ground_truth[0:10])))
-            #print('predictions {}'.format(get_output_sentences(index2token, predictions[0:10])))
-            print('predictions {}'.format([[index2token[j] for j in i] for i in predictions]))
-            print('ground truth {}'.format([[index2token[j] for j in i] for i in ground_truth]))
-
-            print('train cost: {}'.format(train_cost_o_np))
+            logger.debug('train cost: {}'.format(train_cost_o_np))
             if count % 1000:
                 # testing on the validation set
                 val_predictions_o_np, val_cost_o_np = sess.run(
                     [out_o_val, test_cost], feed_dict={onehot_words_pl_val: onehot_words_val[0], word_pos_pl_val: word_pos_val[0],
                                          perm_mat_pl_val: perm_mat_val[0], sent_word_len_list_pl_val: sentence_lens_nwords_val[0],
                                          sent_char_len_list_pl_val: sentence_lens_nchars_val[0]})
-                print('validation cost {}'.format(val_cost_o_np))
+                logger.debug('validation cost {}'.format(val_cost_o_np))
             if count % 10000:
                 # testing on the generative model
                 gen_o_np = sess.run([gen_samples])
 
-    sess.close()
+            summary_writer.add_summary(summary_inf_train_o, global_step_o_np)
+            summary_writer.flush()
 
-if __main__=='__name__':
-    onehot_words, word_pos, sentence_lens_nchars, sentence_lens_nwords, vocabulary_size, max_char_len,index2token = encoder.run_preprocess(
-        mode='train')
-    onehot_words_val, word_pos_val, sentence_lens_nchars_val, sentence_lens_nwords_val, _, _,_ = encoder.run_preprocess(
-        mode='val')
 
-    max_char_len = 494
-    batch_size = 52
-    hidden_size = 20
-    decoder_dim = 20
-    vocabulary = ["<SOS>"] + ["a"] + ["b"] + ["c"] + ["d"] + ["e"] + ["f"] + \
-                 ["g"] + ["h"] + ["i"] + ["j"] + ["k"] + ["l"] + ["m"] + ["n"] + ["o"] + \
-                 ["p"] + ["q"] + ["r"] + ["s"] + ["t"] + ["u"] + ["v"] + ["w"] + \
-                 ["x"] + ["y"] + ["z"] + ["<EOW>"] + ["<EOS>"] + [">"] + ["-"] + ["."] + ["'"] + ["0"] + ["1"] + [
-                     "2"] + ["3"] + \
-                 ["4"] + ["5"] + ["6"] + ["7"] + ["8"] + ["9"] + ["&"] + ["<"] + ["$"] + ["#"] + ["/"] + [","] + ["|"] + \
-                 ["@"] + ["%"] + ["^"] + ["\\"] + ["*"] + ["("] + [")"] + ["{"] + ["}"] + [":"] + [";"]
 
-    vocabulary_size = len(vocabulary)
-    # token2index = {token:index for index,token in enumerate(vocabulary)}
-    index2token = {index: token for index, token in enumerate(vocabulary)}
-
-    train_dict = {'batch_size': 52, 'hidden_size': hidden_size, 'decoder_dim': decoder_dim,
-                  'max_char_len': max_char_len,
-                  'onehot_words': onehot_words, 'word_pos': word_pos, 'sentence_lens_nchars': sentence_lens_nchars,
-                  'vocabulary_size': vocabulary_size, 'sentence_lens_nwords': sentence_lens_nwords,
-                  'onehot_words_val': onehot_words_val, 'word_pos_val': word_pos_val,
-                  'sentence_lens_nchars_val': sentence_lens_nchars_val,
-                  'sentence_lens_nwords_val': sentence_lens_nwords_val}
-
-    network_dict = {'max_char_len': max_char_len, 'batch_size': batch_size, 'hidden_size': hidden_size}
-
-    train(n_epochs=1, network_dict=network_dict, index2token=index2token, **train_dict)
