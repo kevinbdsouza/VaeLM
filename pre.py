@@ -7,7 +7,7 @@ from sys import argv
 def write(file_name,list_inp):
     onehot_words, word_pos, sentence_lens_nchars, sentence_lens_nwords, vocabulary_size, index2token,max_char_len = list_inp
 
-    with h5py.File(file_name+'train.h5', "w") as f:
+    with h5py.File(file_name, "w") as f:
         g_train = f.create_group('train_group')
         g_train['onehot_words'] = onehot_words
         g_train['word_pos'] = word_pos
