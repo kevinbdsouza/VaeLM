@@ -1,5 +1,5 @@
 import logging
-from decoder import Decoder
+from decoder_t import Decoder
 import encoder
 import tensorflow as tf
 import numpy as np
@@ -150,7 +150,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     train_step = opt.apply_gradients(zip(clipped_grads_t, vars_t), global_step=global_step)
     #this is to check out all the gradients, this may take up a lot of memory
     regex = re.compile('[^a-zA-Z]')
-    sum_grad_hist = [tf.summary.histogram(name=regex.sub('', str(j)), values=i) for i, j in zip(clipped_grads_t, vars_t)]
+    sum_grad_hist = [tf.summary.histogram(name=regex.sub('', str(j)), values=i) for i, j in zip(clipped_grads_t, vars_t) if i !=None]
     ######
     #testing stuff
     #testing pls
