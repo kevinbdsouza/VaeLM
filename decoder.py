@@ -135,7 +135,7 @@ class Decoder:
     def cost_function(self,predictions,true_input,global_mu,global_logsig,prior_mu,prior_logsig,posterior_mu,posterior_logsig,shift,total_steps,global_step,kl=True):
         mask = tf.reduce_sum(true_input, -1)
         #reconstruction = tf.reduce_sum(tf.reduce_sum(-true_input*tf.log(predictions+1e-9),axis=-1),-1)
-        reconstruction = tf.reduce_sum(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(true_input,-1),logits=predictions),-1)*mask
+        reconstruction = tf.reduce_sum(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(true_input,-1),logits=predictions)*mask,-1)
         #have to be very careful of order of the mean/stddev parmeters
         #outer reduce sum for each KL term
         '''
@@ -176,7 +176,7 @@ class Decoder:
 
     def test_cost_function(self,predictions,true_input,global_mu,global_logsig,prior_mu,prior_logsig,posterior_mu,posterior_logsig):
         mask = tf.reduce_sum(true_input,-1)
-        reconstruction = tf.reduce_sum(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(true_input, -1), logits=predictions), -1)*mask
+        reconstruction = tf.reduce_sum(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(true_input, -1), logits=predictions)*mask, -1)
         #reconstruction = tf.reduce_sum(-true_input*tf.log(predictions+1e-9),axis=-1)
         #have to be very careful of order of the mean/stddev parmeters
         #outer reduce sum for each KL term
