@@ -60,7 +60,8 @@ class Decoder:
             a_p2 = tf.einsum('ijk,kl->ijl',values,w2)
             print('a p2 {}'.format(a_p2))
             print('here3')
-            out = tf.einsum('k,ijk->ij',v,tf.nn.tanh(name='combine',x=a_p1+a_p2))
+            ##interestingly, matmul is more memmory efficient that einsum here
+            out = tf.squeeze(tf.matmul(tf.reshape((a_p1+a_p2),[-1,self.lat_word_dim]),tf.expand_dims(v,-1)))
             print('MAT for softmax {}'.format(out))
             out_norm = tf.nn.softmax(out,dim=-1)
             context = tf.reduce_sum(values*tf.reshape(tf.stack([out_norm for _ in range(self.lat_word_dim)],-1),[self.batch_size,self.max_num_words,self.lat_word_dim]),axis=-2)
