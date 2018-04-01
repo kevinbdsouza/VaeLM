@@ -3,6 +3,7 @@ from decoder import Decoder
 import encoder
 import tensorflow as tf
 import numpy as np
+import re
 
 
 
@@ -147,6 +148,9 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     grads_t, vars_t = zip(*opt.compute_gradients(cost))
     clipped_grads_t, grad_norm_t = tf.clip_by_global_norm(grads_t, clip_norm=10.0)
     train_step = opt.apply_gradients(zip(clipped_grads_t, vars_t), global_step=global_step)
+    #this is to check out all the gradients, this may take up a lot of memory
+    regex = re.compile('[^a-zA-Z]')
+    sum_grad_hist = [tf.summary.histogram(name=regex.sub('', str(j)), values=i) for i, j in zip(clipped_grads_t, vars_t)]
     ######
     #testing stuff
     #testing pls
@@ -183,7 +187,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
 
     ######
     #tensorboard stuff
-    summary_inf_train = tf.summary.merge([decoder.kls_hist,decoder.global_kl_scalar,decoder.rec_scalar,decoder.cost_scalar,decoder.full_kl_scalar,decoder.sum_all_activ_hist,decoder.sum_global_activ_hist])
+    summary_inf_train = tf.summary.merge([sum_grad_hist,decoder.kls_hist,decoder.global_kl_scalar,decoder.rec_scalar,decoder.cost_scalar,decoder.full_kl_scalar,decoder.sum_all_activ_hist,decoder.sum_global_activ_hist])
     summary_writer = tf.summary.FileWriter(log_dir, sess.graph)
     ######
     log_file = log_dir + "vaelog.txt"
