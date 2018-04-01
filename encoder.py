@@ -21,18 +21,18 @@ def preprocess(mode):
 	max_char_len = 371
 
 	if mode == "train":
-	    sentences = train_sentences
-	    pop_list = [4607,38450,24213,27130,28833,39006,38446,20728,2066,11982,2298,18158,4820,29089,24112,35834,
-                    8573,30944,5791,12130,10752,30857,34030,458,35900,3219,7860,10241]
-        for pop in pop_list:
-            sentences.pop(pop)
-	    #max_char_len = 494
+		sentences = train_sentences
+		pop_list = [4607,38450,24213,27130,28833,39006,38446,20728,2066,11982,2298,18158,4820,29089,24112,35834,
+					8573,30944,5791,12130,10752,30857,34030,458,35900,3219,7860,10241]
+		for pop in pop_list:
+			sentences.pop(pop)
+	#max_char_len = 494
 	elif mode == "val":
-	    sentences = val_sentences
-	    #max_char_len = 356
+		sentences = val_sentences
+		#max_char_len = 356
 	elif mode == "test":
-	    sentences = test_sentences
-	    #max_char_len = 463
+		sentences = test_sentences
+		#max_char_len = 463
 
 	sentences = [["<SOS>"] + word_tokenize(sentence.lower()) + ["<EOS>"] for sentence in sentences]
 
