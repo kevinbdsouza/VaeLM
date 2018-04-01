@@ -44,27 +44,32 @@ class Decoder:
         values = tf.concat(values, 2)
         return values
 
-    def bahd_attention(self,queries,values,units,query_dim,reuse):
+    def bahd_attention(self,queries,values,reuse):
         with tf.variable_scope('attention_layer',reuse=reuse):
-            w1 = tf.get_variable(name='query_w',shape = [units,units])
-            w2 = tf.get_variable(name='value_w',shape = [units,units])
-            v = tf.get_variable(name='v',shape=[units])
+            w1 = tf.get_variable(name='query_w',shape = [self.decoder_units,self.lat_word_dim])
+            w2 = tf.get_variable(name='value_w',shape = [self.lat_word_dim,self.lat_word_dim])
+            v = tf.get_variable(name='v',shape=[self.lat_word_dim])
             print('here')
-            conv_q = tf.reshape(tf.einsum('ij,jk->ik',queries, w1),[-1,1,units])
+            conv_q = tf.reshape(tf.einsum('ij,jk->ik',queries, w1),[-1,1,self.lat_word_dim])
             print('here1')
-            a_p1= tf.reshape(tf.tile(conv_q,[1,1,self.max_num_words]),[self.batch_size,self.max_num_words,units])
+            a_p1= tf.reshape(tf.tile(conv_q,[1,1,self.max_num_words]),[self.batch_size,self.max_num_words,self.lat_word_dim])
             print('here2')
             print(w2)
-            print(values)
+            print('a p1 {}'.format(a_p1))
 
             a_p2 = tf.einsum('ijk,kl->ijl',values,w2)
+            print('a p2 {}'.format(a_p2))
             print('here3')
             out = tf.einsum('k,ijk->ij',v,tf.nn.tanh(name='combine',x=a_p1+a_p2))
-
+            print('MAT for softmax {}'.format(out))
             out_norm = tf.nn.softmax(out,dim=-1)
-            context = tf.reduce_sum(values*tf.reshape(tf.stack([out_norm for _ in range(units)],-1),[self.batch_size,self.max_num_words,units]),axis=-2)
+            context = tf.reduce_sum(values*tf.reshape(tf.stack([out_norm for _ in range(self.lat_word_dim)],-1),[self.batch_size,self.max_num_words,self.lat_word_dim]),axis=-2)
+            #context2 = tf.matmul(tf.reshape(tf.diag(out_norm),[-1,self.max_num_words]),tf.transpose(values,[-1,self.max_num_words]))
+            #is this the same
+            #print('ALT CONTEXT {}'.format(context2))
+            print('CONTEX SHAPE {}'.format(context))
             l1 = tf.concat([context,queries],axis=-1)
-            l1 = tf.reshape(l1,[self.batch_size,units+query_dim])
+            l1 = tf.reshape(l1,[self.batch_size,self.lat_word_dim+self.decoder_units])
         return l1
 
     def decoder_p2(self,num_hidden_word_units,inputs,sequence_length,global_latent,reuse,context_dim,max_time):
@@ -77,17 +82,18 @@ class Decoder:
             if cell_output is None:  # time == 0
                 next_cell_state = cell.zero_state(self.batch_size, tf.float32)
                 next_loop_state = outputs_ta
-                context = self.bahd_attention(queries=tf.zeros(shape=[self.batch_size,num_hidden_word_units],dtype=tf.float32), values=inputs, query_dim=num_hidden_word_units,units=context_dim,reuse=None)
-                next_input = tf.concat([context,tf.zeros(shape=[self.batch_size,self.dict_length],dtype=tf.float32),tf.zeros(shape=[self.batch_size,self.global_lat_dim],dtype=tf.float32)],axis=-1)
+                context = self.bahd_attention(queries=tf.zeros(shape=[self.batch_size,num_hidden_word_units],dtype=tf.float32), values=inputs, reuse=None)
+                next_input = tf.concat([tf.zeros(shape=[self.batch_size,self.dict_length],dtype=tf.float32),tf.zeros(shape=[self.batch_size,self.global_lat_dim],dtype=tf.float32)],axis=-1)
 
             else:
                 next_cell_state = cell_state
-                context = self.bahd_attention(queries=cell_output,values=inputs,query_dim=num_hidden_word_units,units=context_dim,reuse=True)
+                context = self.bahd_attention(queries=cell_output,values=inputs,reuse=True)
                 # should try passing in logits
                 # should also try doing the final decoding in a seperate RNN
                 # should try using a global latent vector here asap
-                prediction = tf.layers.dense(inputs=context,activation=tf.nn.softmax,units=self.dict_length)
-                next_input = tf.concat([context,prediction,global_latent],axis=-1)
+                prediction = tf.layers.dense(inputs=context,activation=None,units=self.dict_length)
+                #took context out of decoder loop because softmax may be saturating
+                next_input = tf.concat([prediction,global_latent],axis=-1)
                 next_loop_state = loop_state.write(time-1,prediction)
             elements_finished = (time >= sequence_length)
 
@@ -127,7 +133,9 @@ class Decoder:
         return [mu,log_sig]
 
     def cost_function(self,predictions,true_input,global_mu,global_logsig,prior_mu,prior_logsig,posterior_mu,posterior_logsig,shift,total_steps,global_step,kl=True):
-        reconstruction = tf.reduce_sum(tf.reduce_sum(-true_input*tf.log(predictions+1e-9),axis=-1),-1)
+        mask = tf.reduce_sum(true_input, -1)
+        #reconstruction = tf.reduce_sum(tf.reduce_sum(-true_input*tf.log(predictions+1e-9),axis=-1),-1)
+        reconstruction = tf.reduce_sum(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(true_input,-1),logits=predictions),-1)*mask
         #have to be very careful of order of the mean/stddev parmeters
         #outer reduce sum for each KL term
         '''
@@ -167,8 +175,9 @@ class Decoder:
         return cost,reconstruction,kl_p3,kl_p1,kl_global_lat,kl_p2, anneal_c
 
     def test_cost_function(self,predictions,true_input,global_mu,global_logsig,prior_mu,prior_logsig,posterior_mu,posterior_logsig):
-
-        reconstruction = tf.reduce_sum(-true_input*tf.log(predictions+1e-9),axis=-1)
+        mask = tf.reduce_sum(true_input,-1)
+        reconstruction = tf.reduce_sum(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(true_input, -1), logits=predictions), -1)*mask
+        #reconstruction = tf.reduce_sum(-true_input*tf.log(predictions+1e-9),axis=-1)
         #have to be very careful of order of the mean/stddev parmeters
         #outer reduce sum for each KL term
         kl_p1 = 0.5*(tf.reduce_sum(tf.exp(posterior_logsig-prior_logsig),axis=-1)+tf.reduce_sum((posterior_mu-prior_mu)*tf.divide(1,tf.exp(prior_logsig))*(posterior_mu-prior_mu),axis=-1)-tf.cast(tf.shape(posterior_mu)[-1],dtype=tf.float32)+tf.reduce_sum((prior_logsig-posterior_logsig),axis=-1))

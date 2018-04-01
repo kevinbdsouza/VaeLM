@@ -135,7 +135,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     total_steps = np.round(np.true_divide(n_epochs,2)*np.shape(onehot_words)[0],decimals=0)
 
     ####
-    cost,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal = decoder.calc_cost(kl=True,sentence_word_lens=sent_word_len_list_pl,shift=shift,total_steps=total_steps,global_step=global_step,global_latent_sample=global_latent_o,global_logsig=global_logsig_o,global_mu=global_mu_o,predictions=out_o,true_input=onehot_words_pl,posterior_logsig=logsig_state_out_p,posterior_mu=mean_state_out_p,post_samples=word_state_out_p,reuse=None)
+    cost,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal = decoder.calc_cost(kl=False,sentence_word_lens=sent_word_len_list_pl,shift=shift,total_steps=total_steps,global_step=global_step,global_latent_sample=global_latent_o,global_logsig=global_logsig_o,global_mu=global_mu_o,predictions=out_o,true_input=onehot_words_pl,posterior_logsig=logsig_state_out_p,posterior_mu=mean_state_out_p,post_samples=word_state_out_p,reuse=None)
 
     ######
     # Train Step
@@ -197,14 +197,14 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
         inds = range(np.shape(onehot_words)[0])
         np.random.shuffle(inds)
         for count,batch in enumerate(inds):
-            train_predictions_o_np, train_cost_o_np, _, global_step_o_np,train_rec_cost_o_np,_,_,_,_,anneal_c,summary_inf_train_o=sess.run([out_o,cost,train_step,global_step,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal,summary_inf_train],feed_dict={onehot_words_pl:onehot_words[batch],word_pos_pl:word_pos[batch],perm_mat_pl:perm_mat[batch],sent_word_len_list_pl:sentence_lens_nwords[batch],sent_char_len_list_pl:sentence_lens_nchars[batch]})
+            train_predictions_o_np, train_cost_o_np, _, global_step_o_np,train_rec_cost_o_np,_,_,_,_,summary_inf_train_o=sess.run([out_o,cost,train_step,global_step,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,summary_inf_train],feed_dict={onehot_words_pl:onehot_words[batch],word_pos_pl:word_pos[batch],perm_mat_pl:perm_mat[batch],sent_word_len_list_pl:sentence_lens_nwords[batch],sent_char_len_list_pl:sentence_lens_nchars[batch]})
             predictions = np.argmax(train_predictions_o_np[0:10],axis=-1)
             ground_truth = np.argmax(onehot_words[batch][0:10], axis=-1)
-	    logger.debug('anneal const {}'.format(anneal_c))
+	    #logger.debug('anneal const {}'.format(anneal_c))
             #logger.debug('ground truth {}'.format(get_output_sentences(index2token, ground_truth[0:10])))
             #logger.debug('predictions {}'.format(get_output_sentences(index2token, predictions[0:10])))
-            logger.debug('predictions {}'.format([[index2token[j] for j in i] for i in predictions]))
-            logger.debug('ground truth {}'.format([[index2token[j] for j in i] for i in ground_truth]))
+            logger.debug('predictions {}'.format([[index2token[j] for j in i] for i in predictions[0:10,0:50]]))
+            logger.debug('ground truth {}'.format([[index2token[j] for j in i] for i in ground_truth[0:10,0:50]]))
 
             logger.debug('train cost: {}'.format(train_cost_o_np))
             if count % 1000:
