@@ -83,7 +83,7 @@ class Decoder:
             if cell_output is None:  # time == 0
                 next_cell_state = cell.zero_state(self.batch_size, tf.float32)
                 next_loop_state = outputs_ta
-                #context = self.bahd_attention(queries=tf.zeros(shape=[self.batch_size,num_hidden_word_units],dtype=tf.float32), values=inputs, reuse=None)
+                context = self.bahd_attention(queries=tf.zeros(shape=[self.batch_size,num_hidden_word_units],dtype=tf.float32), values=inputs, reuse=None)
                 next_input = tf.concat([tf.zeros(shape=[self.batch_size,self.dict_length],dtype=tf.float32),tf.zeros(shape=[self.batch_size,self.global_lat_dim],dtype=tf.float32)],axis=-1)
 
             else:
