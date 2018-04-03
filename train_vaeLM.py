@@ -1,9 +1,8 @@
 import logging
-from decoder_t import Decoder
+from decoder import Decoder
 import encoder
 import tensorflow as tf
 import numpy as np
-import re
 
 
 
@@ -68,6 +67,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     input_size = vocabulary_size
     hidden_size = kwargs['hidden_size']
     decoder_dim = kwargs['decoder_dim']
+    decoder_units_p3=kwargs['decoder_units_p3']
     num_batches = len(onehot_words) // batch_size
     network_dict['input_size'] = input_size
 
@@ -86,7 +86,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     word_pos_pl =tf.placeholder(name='word_pos',dtype=tf.float32,shape=[batch_size, max_char_len])
     sent_char_len_list_pl= tf.placeholder(name='sent_char_len_list',dtype=tf.float32,shape=[batch_size])
     #decoder
-    arg_dict = {'encoder_dim':hidden_size,'lat_word_dim':hidden_size,'sentence_lens':None,'global_lat_dim':hidden_size,'batch_size':batch_size,'max_num_words':max_word_len,'decoder_units':decoder_dim,'num_sentence_characters':max_char_len,'dict_length':vocabulary_size}
+    arg_dict = {'decoder_p3_units':decoder_units_p3,'encoder_dim':hidden_size,'lat_word_dim':hidden_size,'sentence_lens':None,'global_lat_dim':hidden_size,'batch_size':batch_size,'max_num_words':max_word_len,'decoder_units':decoder_dim,'num_sentence_characters':max_char_len,'dict_length':vocabulary_size}
     decoder = Decoder(**arg_dict)
 
 
@@ -132,25 +132,22 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     sentence_lens_nchars_val = np.reshape(sentence_lens_nchars_val[0:n_valid_use],newshape=[-1,batch_size_val])
 
     ###KL annealing parameters
-    shift = 0
-    total_steps = np.round(np.true_divide(n_epochs,2)*np.shape(onehot_words)[0],decimals=0)
+    shift = 10000
+    total_steps = np.round(np.true_divide(n_epochs,5)*np.shape(onehot_words)[0],decimals=0)
 
     ####
-    cost,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal = decoder.calc_cost(kl=False,sentence_word_lens=sent_word_len_list_pl,shift=shift,total_steps=total_steps,global_step=global_step,global_latent_sample=global_latent_o,global_logsig=global_logsig_o,global_mu=global_mu_o,predictions=out_o,true_input=onehot_words_pl,posterior_logsig=logsig_state_out_p,posterior_mu=mean_state_out_p,post_samples=word_state_out_p,reuse=None)
+    cost,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal = decoder.calc_cost(kl=True,sentence_word_lens=sent_word_len_list_pl,shift=shift,total_steps=total_steps,global_step=global_step,global_latent_sample=global_latent_o,global_logsig=global_logsig_o,global_mu=global_mu_o,predictions=out_o,true_input=onehot_words_pl,posterior_logsig=logsig_state_out_p,posterior_mu=mean_state_out_p,post_samples=word_state_out_p,reuse=None)
 
     ######
     # Train Step
 
     # clipping gradients
     ######
-    lr = 1e-4
+    lr = 1e-3
     opt = tf.train.AdamOptimizer(lr)
     grads_t, vars_t = zip(*opt.compute_gradients(cost))
-    clipped_grads_t, grad_norm_t = tf.clip_by_global_norm(grads_t, clip_norm=10.0)
+    clipped_grads_t, grad_norm_t = tf.clip_by_global_norm(grads_t, clip_norm=5.0)
     train_step = opt.apply_gradients(zip(clipped_grads_t, vars_t), global_step=global_step)
-    #this is to check out all the gradients, this may take up a lot of memory
-    regex = re.compile('[^a-zA-Z]')
-    sum_grad_hist = [tf.summary.histogram(name=regex.sub('', str(j)), values=i) for i, j in zip(clipped_grads_t, vars_t) if i !=None]
     ######
     #testing stuff
     #testing pls
@@ -187,7 +184,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
 
     ######
     #tensorboard stuff
-    summary_inf_train = tf.summary.merge([sum_grad_hist,decoder.kls_hist,decoder.global_kl_scalar,decoder.rec_scalar,decoder.cost_scalar,decoder.full_kl_scalar,decoder.sum_all_activ_hist,decoder.sum_global_activ_hist])
+    summary_inf_train = tf.summary.merge([decoder.kls_hist,decoder.global_kl_scalar,decoder.rec_scalar,decoder.cost_scalar,decoder.full_kl_scalar,decoder.sum_all_activ_hist,decoder.sum_global_activ_hist])
     summary_writer = tf.summary.FileWriter(log_dir, sess.graph)
     ######
     log_file = log_dir + "vaelog.txt"
@@ -201,26 +198,29 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
         inds = range(np.shape(onehot_words)[0])
         np.random.shuffle(inds)
         for count,batch in enumerate(inds):
-            train_predictions_o_np, train_cost_o_np, _, global_step_o_np,train_rec_cost_o_np,_,_,_,_,summary_inf_train_o=sess.run([out_o,cost,train_step,global_step,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,summary_inf_train],feed_dict={onehot_words_pl:onehot_words[batch],word_pos_pl:word_pos[batch],perm_mat_pl:perm_mat[batch],sent_word_len_list_pl:sentence_lens_nwords[batch],sent_char_len_list_pl:sentence_lens_nchars[batch]})
-            predictions = np.argmax(train_predictions_o_np[0:10],axis=-1)
-            ground_truth = np.argmax(onehot_words[batch][0:10], axis=-1)
+            anneal_c_o,train_predictions_o_np, train_cost_o_np, _, global_step_o_np,train_rec_cost_o_np,_,_,_,_,summary_inf_train_o=sess.run([anneal,out_o,cost,train_step,global_step,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,summary_inf_train],feed_dict={onehot_words_pl:onehot_words[batch],word_pos_pl:word_pos[batch],perm_mat_pl:perm_mat[batch],sent_word_len_list_pl:sentence_lens_nwords[batch],sent_char_len_list_pl:sentence_lens_nchars[batch]})
 	    #logger.debug('anneal const {}'.format(anneal_c))
             #logger.debug('ground truth {}'.format(get_output_sentences(index2token, ground_truth[0:10])))
-            #logger.debug('predictions {}'.format(get_output_sentences(index2token, predictions[0:10])))
-            logger.debug('predictions {}'.format([[index2token[j] for j in i] for i in predictions[0:10,0:50]]))
-            logger.debug('ground truth {}'.format([[index2token[j] for j in i] for i in ground_truth[0:10,0:50]]))
-
-            logger.debug('train cost: {}'.format(train_cost_o_np))
-            if count % 1000:
+            if count % 1000==0:
                 # testing on the validation set
                 val_predictions_o_np, val_cost_o_np = sess.run(
                     [out_o_val, test_cost], feed_dict={onehot_words_pl_val: onehot_words_val[0], word_pos_pl_val: word_pos_val[0],
                                          perm_mat_pl_val: perm_mat_val[0], sent_word_len_list_pl_val: sentence_lens_nwords_val[0],
                                          sent_char_len_list_pl_val: sentence_lens_nchars_val[0]})
+
+                predictions = np.argmax(train_predictions_o_np[0:10],axis=-1)
+                ground_truth = np.argmax(onehot_words[batch][0:10], axis=-1)
+
+                logger.debug('predictions {}'.format([[index2token[j] for j in i] for i in predictions[0:10,0:50]]))
+                logger.debug('ground truth {}'.format([[index2token[j] for j in i] for i in ground_truth[0:10,0:50]]))
+                logger.debug('global step: {} Epoch: {} count: {} anneal:{}'.format(global_step_o_np,epoch,count,anneal_c_o))
+                logger.debug('train cost: {}'.format(train_cost_o_np))
                 logger.debug('validation cost {}'.format(val_cost_o_np))
-            if count % 10000:
+            if count % 10000==0:
                 # testing on the generative model
                 gen_o_np = sess.run([gen_samples])
+	        gen_pred = np.argmax(gen_o_np[0:10],axis=-1)	
+		logger.debug('GEN predictions {}'.format([[index2token[j] for j in i] for i in gen_pred[0][0:10,0:50]]))
 
             summary_writer.add_summary(summary_inf_train_o, global_step_o_np)
             summary_writer.flush()

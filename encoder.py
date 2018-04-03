@@ -222,9 +222,12 @@ class Encoder:
 		        #reparametrization
 		        z_concat = tf.contrib.layers.fully_connected(next_sampled_input,2*self.hidden_size)
 		        z_mean = z_concat[:,:self.hidden_size]
+			z_mean = z_mean*10
 		        z_log_sigma_sq =  z_concat[:,self.hidden_size:self.hidden_size*2]
+			z_log_sigma_sq =z_log_sigma_sq-3
 		        eps = tf.random_normal((self.batch_size,self.hidden_size),0,1,dtype=tf.float32)
-		        z_sample = tf.add(z_mean,tf.multiply(tf.sqrt(tf.exp(z_log_sigma_sq)),eps))
+
+		        z_sample = tf.add(z_mean,tf.multiply(tf.exp(z_log_sigma_sq),eps))
 		        
 		        z_sample = tf.multiply(z_sample,word_slice)
 		        z_mean = tf.multiply(z_mean,word_slice)
