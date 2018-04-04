@@ -243,7 +243,9 @@ class Encoder:
 				#reparametrization
 				z_concat = tf.contrib.layers.fully_connected(next_sampled_input,2*self.hidden_size)
 				z_mean = z_concat[:,:self.hidden_size]
+				z_mean = z_mean*10
 				z_log_sigma_sq =  z_concat[:,self.hidden_size:self.hidden_size*2]
+				z_log_sigma_sq =z_log_sigma_sq-3
 				eps = tf.random_normal((self.batch_size,self.hidden_size),0,1,dtype=tf.float32)
 				z_sample = tf.add(z_mean,tf.multiply(tf.exp(z_log_sigma_sq),eps))
 
@@ -254,9 +256,9 @@ class Encoder:
 
 				next_cell_state = tf.multiply(z_sample,sample_mask) + tf.multiply(z_mean,other_words_mask)
 
-				sample_loop_state = loop_state[0].write(time - 1, word_locations)
-				mean_loop_state = loop_state[1].write(time - 1, other_words_mask)
-				sigma_loop_state = loop_state[2].write(time - 1, sample_mask)
+				sample_loop_state = loop_state[0].write(time - 1, next_cell_state)
+				mean_loop_state = loop_state[1].write(time - 1, z_mean)
+				sigma_loop_state = loop_state[2].write(time - 1, z_log_sigma_sq)
 				next_loop_state = (sample_loop_state,mean_loop_state,sigma_loop_state)
 
 				word_slice = tf.logical_not(tf.cast(word_slice,dtype=tf.bool))
