@@ -291,6 +291,36 @@ class Decoder:
 	    predictions = self.decoder_p3(inputs=context,reuse=True,sequence_length=np.repeat(self.num_sentence_characters,self.batch_size,axis=-1),max_time=self.num_sentence_characters)	
             return predictions
 
+    def vanilla_decoder(self,inputs,reuse):
+
+        outputs_ta = tf.TensorArray(dtype=tf.float32, size=max_time, name='pred_char_array')
+
+        cell = tf.contrib.rnn.LSTMCell(self.decoder_p3_units)
+
+        def loop_fn(time, cell_output, cell_state, loop_state):
+            next_loop_state = loop_state
+            emit_output = cell_output  # == None for time == 0
+            if cell_output is None:  # time == 0
+                next_cell_state = cell.zero_state(self.batch_size, tf.float32)
+                next_input = tf.concat(
+                    [tf.zeros(shape=[self.batch_size, self.dict_length+self.lat_word_dim], dtype=tf.float32)],
+                    axis=-1)
+                next_loop_state = outputs_ta
+            else:
+
+                next_cell_state = cell_state
+                prediction = tf.layers.dense(inputs=cell_output, activation=None, units=self.dict_length)
+                next_loop_state = loop_state.write(time - 1, prediction)
+                next_input = tf.concat([prediction, inputs], axis=-1)
+            elements_finished = (time >= sequence_length - 1)
+
+            return (elements_finished, next_input, next_cell_state, emit_output, next_loop_state)
+
+        with tf.variable_scope('vanilla_decoder', reuse=reuse):
+            _, _, loop_ta = tf.nn.raw_rnn(cell, loop_fn)
+            output = _transpose_batch_time(loop_ta.stack())
+        return output
+
 
 #Example usage
 #batch_len = np.random.randint(low=0,high=30,size=[10])

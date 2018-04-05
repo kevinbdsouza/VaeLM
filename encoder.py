@@ -200,7 +200,7 @@ class Encoder:
 		with tf.variable_scope('lat_var',reuse=reuse):
 			out = tf.layers.dense(inputs=state[-1],units=self.hidden_size*2,activation=tf.nn.relu)
 			mu, logsig = tf.split(tf.layers.dense(inputs=out, units=self.hidden_size * 2, activation=None),2,axis=-1)
-		eps = tf.random_normal(shape=[self.batch_size])
+		eps = tf.random_normal(shape=[self.batch_size],dtype=tf.float32)
 		lat_var = mu+tf.exp(logsig)*eps
 		return lat_var, mu, logsig
 
