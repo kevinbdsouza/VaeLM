@@ -190,17 +190,21 @@ class Encoder:
 
 	# our [494, 52, 61] tensor becomes [[52, 61], [52, 61], ...]
 	def run_encoder(self,inputs,word_pos,reuse):
+                #input projections
+                inputs = tf.reshape(inputs,[-1,self.vocabulary_size])
+                inputs = tf.layers.dense(inputs=inputs,units=self.input_size,activation=None)
+                inputs = tf.reshape(inputs,[self.batch_size,self.max_char_len,self.input_size])
+                inputs.set_shape([self.batch_size,self.max_char_len,self.input_size])
+                inputs_t = tf.transpose(inputs,perm=[1, 0, 2])
+                inputs_t.set_shape([self.max_char_len,self.batch_size,self.input_size])
+                _inputs_ta = tf.TensorArray(dtype=tf.float32, size=self.max_char_len,name='char_array')
+                _inputs_ta = _inputs_ta.unstack(inputs_t)
 
-		inputs_t = tf.transpose(inputs,perm=[1, 0, 2])
-		_inputs_ta = tf.TensorArray(dtype=tf.float32, size=self.max_char_len,name='char_array')
-		_inputs_ta = _inputs_ta.unstack(inputs_t) 
-
-		cell = tf.contrib.rnn.LSTMCell(self.hidden_size)
-		output_ta = tf.TensorArray(size=self.max_char_len, dtype=tf.float32,name='word_array')
-		mean_ta = tf.TensorArray(size=self.max_char_len, dtype=tf.float32,name='mean_array')
-		sigma_ta = tf.TensorArray(size=self.max_char_len, dtype=tf.float32,name='sigma_array')
-		word_pos = tf.convert_to_tensor(word_pos,dtype=tf.float32)
-
+                cell = tf.contrib.rnn.LSTMCell(self.hidden_size)
+                output_ta = tf.TensorArray(size=self.max_char_len, dtype=tf.float32,name='word_array')
+                mean_ta = tf.TensorArray(size=self.max_char_len, dtype=tf.float32,name='mean_array')
+                sigma_ta = tf.TensorArray(size=self.max_char_len, dtype=tf.float32,name='sigma_array')
+                word_pos = tf.convert_to_tensor(word_pos,dtype=tf.float32)
 		# create loop_fn for raw_rnn
 		def loop_fn(time, cell_output, cell_state, loop_state):
 		    emit_output = cell_output  # == None if time = 0
