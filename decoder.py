@@ -221,7 +221,7 @@ class Decoder:
             tf.square(tf.exp(global_logsig)),axis=-1) + tf.reduce_sum((global_mu * global_mu), axis=-1))
 
         kl_p3 = kl_p1+kl_global_lat
-        cost = tf.reduce_mean(kl_p3+tf.reduce_sum(reconstruction,-1))
+        cost = tf.reduce_mean(kl_p3+reconstruction)
         return cost,reconstruction,kl_p3,kl_p1
 
     def calc_cost(self,kl,posterior_logsig,post_samples,global_mu,global_logsig,global_latent_sample,posterior_mu,true_input,sentence_word_lens,predictions,shift, total_steps, global_step,reuse):
