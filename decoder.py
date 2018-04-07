@@ -145,7 +145,7 @@ class Decoder:
 	    out = self.decoder_p3(inputs=out_2,reuse=reuse,max_time=self.num_sentence_characters,sequence_length=sequence_length)
         return out, global_latent,global_logsig,global_mu
 
-    def prior(self, values,num_units,global_latent,word_lens,mask,reuse):
+    def prior(self, values,num_units,global_latent,word_lens,reuse):
         global_latent= tf.transpose(tf.stack([global_latent for _ in range(self.max_num_words)]),[1,0,2])
         print(' PRIOR input dim from post {}'.format(values))
         values = tf.concat([tf.zeros(shape=[self.batch_size,1, self.lat_word_dim], dtype=tf.float32),values],axis=1)
@@ -164,7 +164,7 @@ class Decoder:
             print('MU{}'.format(mu))
         return [mu,log_sig]
 
-    def cost_function(self,predictions,true_input,global_mu,global_logsig,prior_mu,prior_logsig,posterior_mu,posterior_logsig,shift,total_steps,global_step,kl=True):
+    def cost_function(self,mask_kl,predictions,true_input,global_mu,global_logsig,prior_mu,prior_logsig,posterior_mu,posterior_logsig,shift,total_steps,global_step,kl=True):
         mask = tf.reduce_sum(true_input, -1)
         #reconstruction = tf.reduce_sum(tf.reduce_sum(-true_input*tf.log(predictions+1e-9),axis=-1),-1)
         reconstruction = tf.reduce_sum(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(true_input,-1),logits=predictions)*mask,-1)
@@ -187,7 +187,7 @@ class Decoder:
                        tf.cast(tf.shape(posterior_mu)[-1], dtype=tf.float32)+tf.reduce_sum(tf.divide(1, tf.square(tf.exp(prior_logsig))) * tf.square(tf.exp(posterior_logsig)),
                            axis=-1) + tf.reduce_sum(((posterior_mu - prior_mu) * tf.divide(1, tf.square(tf.exp(prior_logsig))) * (posterior_mu - prior_mu)),axis=-1))
         #have to mask out for padding (there will be numbers there due to the dense after the rnn)
-        kl_p1=tf.reduce_sum((kl_p1*mask),-1)
+        kl_p1=tf.reduce_sum((kl_p1*mask_kl),-1)
         '''
         kl_global_lat = 0.5 * (
         tf.reduce_sum(tf.exp(global_logsig), axis=-1) + tf.reduce_sum((global_mu * global_mu), axis=-1) - tf.cast(
@@ -212,7 +212,7 @@ class Decoder:
         cost = tf.reduce_mean(kl_p3+reconstruction)
         return cost,reconstruction,kl_p3,kl_p1,kl_global_lat,kl_p2, anneal_c
 
-    def test_cost_function(self,predictions,true_input,global_mu,global_logsig,prior_mu,prior_logsig,posterior_mu,posterior_logsig):
+    def test_cost_function(self,predictions,mask_kl,true_input,global_mu,global_logsig,prior_mu,prior_logsig,posterior_mu,posterior_logsig):
         mask = tf.reduce_sum(true_input,-1)
         reconstruction = tf.reduce_sum(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(true_input, -1), logits=predictions)*mask, -1)
         #reconstruction = tf.reduce_sum(-true_input*tf.log(predictions+1e-9),axis=-1)
@@ -232,7 +232,7 @@ class Decoder:
                        tf.cast(tf.shape(posterior_mu)[-1], dtype=tf.float32)+tf.reduce_sum(tf.divide(1, tf.square(tf.exp(prior_logsig))) * tf.square(tf.exp(posterior_logsig)),
                            axis=-1) + tf.reduce_sum(((posterior_mu - prior_mu) * tf.divide(1, tf.square(tf.exp(prior_logsig))) * (posterior_mu - prior_mu)),axis=-1))
         #have to mask out for padding (there will be numbers there due to the dense after the rnn)
-        kl_p1=tf.reduce_sum((kl_p1*mask),-1)
+        kl_p1=tf.reduce_sum((kl_p1*mask_kl),-1)
 
         kl_global_lat = 0.5 * (-tf.reduce_sum(tf.log(tf.square(tf.exp(global_logsig))),axis=-1) - tf.cast(tf.shape(global_mu)[-1],dtype=tf.float32) + tf.reduce_sum(
             tf.square(tf.exp(global_logsig)),axis=-1) + tf.reduce_sum((global_mu * global_mu), axis=-1))
@@ -241,9 +241,9 @@ class Decoder:
         cost = tf.reduce_mean(kl_p3+reconstruction)
         return cost,reconstruction,kl_p3,kl_p1
 
-    def calc_cost(self,kl,posterior_logsig,post_samples,global_mu,global_logsig,global_latent_sample,posterior_mu,true_input,sentence_word_lens,predictions,shift, total_steps, global_step,reuse):
+    def calc_cost(self,mask_kl,kl,posterior_logsig,post_samples,global_mu,global_logsig,global_latent_sample,posterior_mu,true_input,sentence_word_lens,predictions,shift, total_steps, global_step,reuse):
         prior_mu,prior_logsig = self.prior(values=post_samples,num_units=self.units_encoder_lstm,global_latent=global_latent_sample,word_lens=sentence_word_lens,reuse=reuse)
-        cost, reconstruction, kl_p3, kl_p1,kl_global,kl_p2,anneal_c= self.cost_function(kl=kl,predictions=predictions,true_input=true_input,global_mu=global_mu,global_logsig=global_logsig,prior_mu=prior_mu,prior_logsig=prior_logsig,posterior_mu=posterior_mu,posterior_logsig=posterior_logsig,shift=shift, total_steps=total_steps, global_step=global_step)
+        cost, reconstruction, kl_p3, kl_p1,kl_global,kl_p2,anneal_c= self.cost_function(mask_kl=mask_kl,kl=kl,predictions=predictions,true_input=true_input,global_mu=global_mu,global_logsig=global_logsig,prior_mu=prior_mu,prior_logsig=prior_logsig,posterior_mu=posterior_mu,posterior_logsig=posterior_logsig,shift=shift, total_steps=total_steps, global_step=global_step)
     	self.kls_hist = tf.summary.histogram('kls',tf.reduce_mean(kl_p1,0))
     	self.global_kl_scalar = tf.summary.scalar('kls_global',tf.reduce_mean(kl_global))
     	self.rec_scalar = tf.summary.scalar('rec',tf.reduce_mean(reconstruction))
@@ -260,9 +260,9 @@ class Decoder:
 
         return cost,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal_c
 
-    def test_calc_cost(self,posterior_logsig,post_samples,global_mu,global_logsig,global_latent_sample,posterior_mu,true_input,predictions,sentence_word_lens):
+    def test_calc_cost(self,mask_kl,posterior_logsig,post_samples,global_mu,global_logsig,global_latent_sample,posterior_mu,true_input,predictions,sentence_word_lens):
         prior_mu,prior_logsig = self.prior(values=post_samples,num_units=self.units_encoder_lstm,global_latent=global_latent_sample,word_lens=sentence_word_lens,reuse=True)
-        cost,reconstruction,kl_p3,kl_p1 = self.test_cost_function(predictions=predictions,true_input=true_input,global_mu=global_mu,global_logsig=global_logsig,prior_mu=prior_mu,prior_logsig=prior_logsig,posterior_mu=posterior_mu,posterior_logsig=posterior_logsig)
+        cost,reconstruction,kl_p3,kl_p1 = self.test_cost_function(mask_kl=mask_kl,predictions=predictions,true_input=true_input,global_mu=global_mu,global_logsig=global_logsig,prior_mu=prior_mu,prior_logsig=prior_logsig,posterior_mu=posterior_mu,posterior_logsig=posterior_logsig)
         self.sum_rec_val = tf.summary.scalar('rec_test',tf.reduce_mean(reconstruction))
         self.sum_kl_val = tf.summary.scalar('kl_test',tf.reduce_mean(kl_p3))
         return cost

@@ -80,6 +80,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     perm_mat,max_word_len,sent_len_list = prep_perm_matrix(batch_size=batch_size,word_pos_matrix=word_pos,max_char_len=max_char_len)
 
     #placeholders
+    mask_kl_pl = tf.placeholder(name='kl_pl_mask',dtype=tf.float32,shape=[batch_size,max_word_len])
     sent_word_len_list_pl  = tf.placeholder(name='word_lens',dtype=tf.int32,shape=[batch_size])
     perm_mat_pl = tf.placeholder(name='perm_mat_pl',dtype=tf.int32,shape=[batch_size,max_word_len])
     onehot_words_pl =tf.placeholder(name='onehot_words',dtype=tf.float32,shape=[batch_size, max_char_len, vocabulary_size])
@@ -114,10 +115,20 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
 
     # shaping for batching
     #reshape problem
+
     onehot_words = np.reshape(onehot_words,newshape=[-1,batch_size,max_char_len,vocabulary_size])
     word_pos = np.reshape(word_pos,newshape=[-1,batch_size,max_char_len])
+    # making word masks for kl term
+    kl_mask = []
+    for word_len in np.reshape(sentence_lens_nwords,-1):
+        vec = np.zeros([max_word_len],dtype=np.float32)
+        vec[0:word_len] = np.ones(shape=word_len,dtype=tf.float32)
+        kl_mask.append(vec)
+    kl_mask = np.asarray(kl_mask)
+    kl_mask = np.reshape(kl_mask,newshape=[-1,batch_size])
     sentence_lens_nwords = np.reshape(sentence_lens_nwords,newshape=[-1,batch_size])
     sentence_lens_nchars = np.reshape(sentence_lens_nchars,newshape=[-1,batch_size])
+
 
     #shaping for validation set
     batch_size_val = batch_size
@@ -136,7 +147,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     total_steps = np.round(np.true_divide(n_epochs,5)*np.shape(onehot_words)[0],decimals=0)
 
     ####
-    cost,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal = decoder.calc_cost(kl=True,sentence_word_lens=sent_word_len_list_pl,shift=shift,total_steps=total_steps,global_step=global_step,global_latent_sample=global_latent_o,global_logsig=global_logsig_o,global_mu=global_mu_o,predictions=out_o,true_input=onehot_words_pl,posterior_logsig=logsig_state_out_p,posterior_mu=mean_state_out_p,post_samples=word_state_out_p,reuse=None)
+    cost,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal = decoder.calc_cost(mask_kl=mask_kl_pl,kl=True,sentence_word_lens=sent_word_len_list_pl,shift=shift,total_steps=total_steps,global_step=global_step,global_latent_sample=global_latent_o,global_logsig=global_logsig_o,global_mu=global_mu_o,predictions=out_o,true_input=onehot_words_pl,posterior_logsig=logsig_state_out_p,posterior_mu=mean_state_out_p,post_samples=word_state_out_p,reuse=None)
 
     ######
     # Train Step
@@ -170,7 +181,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     logsig_state_out_p_val = permute_encoder_output(encoder_out=logsig_state_out_val, perm_mat=perm_mat_pl_val, batch_size=batch_size_val, max_word_len=max_word_len)
     out_o_val, global_latent_o_val,global_logsig_o_val,global_mu_o_val = decoder.run_decoder(reuse=True,units_lstm_decoder=decoder_dim,lat_words=word_state_out_p_val,units_dense_global=decoder.global_lat_dim,sequence_length=tf.cast(sent_char_len_list_pl_val,dtype=tf.int32))
     #test cost
-    test_cost = decoder.test_calc_cost(sentence_word_lens=sent_word_len_list_pl_val,posterior_logsig=logsig_state_out_p_val,post_samples=word_state_out_p_val,global_mu=global_mu_o_val,global_logsig=global_logsig_o_val,global_latent_sample=global_latent_o_val,posterior_mu=mean_state_out_p_val,true_input=onehot_words_pl_val,predictions=out_o_val)
+    test_cost = decoder.test_calc_cost(mask_kl=mask_kl_pl,sentence_word_lens=sent_word_len_list_pl_val,posterior_logsig=logsig_state_out_p_val,post_samples=word_state_out_p_val,global_mu=global_mu_o_val,global_logsig=global_logsig_o_val,global_latent_sample=global_latent_o_val,posterior_mu=mean_state_out_p_val,true_input=onehot_words_pl_val,predictions=out_o_val)
 
     ######
 
@@ -185,6 +196,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     ######
     #tensorboard stuff
     summary_inf_train = tf.summary.merge([decoder.kls_hist,decoder.global_kl_scalar,decoder.rec_scalar,decoder.cost_scalar,decoder.full_kl_scalar,decoder.sum_all_activ_hist,decoder.sum_global_activ_hist])
+    summary_inf_test = tf.summary.merge([decoder.sum_rec_val,decoder.sum_kl_val])
     summary_writer = tf.summary.FileWriter(log_dir, sess.graph)
     ######
     log_file = log_dir + "vaelog.txt"
@@ -198,15 +210,16 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
         inds = range(np.shape(onehot_words)[0])
         np.random.shuffle(inds)
         for count,batch in enumerate(inds):
-            anneal_c_o,train_predictions_o_np, train_cost_o_np, _, global_step_o_np,train_rec_cost_o_np,_,_,_,_,summary_inf_train_o=sess.run([anneal,out_o,cost,train_step,global_step,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,summary_inf_train],feed_dict={onehot_words_pl:onehot_words[batch],word_pos_pl:word_pos[batch],perm_mat_pl:perm_mat[batch],sent_word_len_list_pl:sentence_lens_nwords[batch],sent_char_len_list_pl:sentence_lens_nchars[batch]})
+            anneal_c_o,train_predictions_o_np, train_cost_o_np, _, global_step_o_np,train_rec_cost_o_np,_,_,_,_,summary_inf_train_o=sess.run([anneal,out_o,cost,train_step,global_step,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,summary_inf_train],feed_dict={mask_kl_pl:kl_mask[batch],onehot_words_pl:onehot_words[batch],word_pos_pl:word_pos[batch],perm_mat_pl:perm_mat[batch],sent_word_len_list_pl:sentence_lens_nwords[batch],sent_char_len_list_pl:sentence_lens_nchars[batch]})
 	    #logger.debug('anneal const {}'.format(anneal_c))
             #logger.debug('ground truth {}'.format(get_output_sentences(index2token, ground_truth[0:10])))
-            if count % 1000==0:
+            if global_step_o_np % 10==0:
                 # testing on the validation set
-                val_predictions_o_np, val_cost_o_np = sess.run(
-                    [out_o_val, test_cost], feed_dict={onehot_words_pl_val: onehot_words_val[0], word_pos_pl_val: word_pos_val[0],
-                                         perm_mat_pl_val: perm_mat_val[0], sent_word_len_list_pl_val: sentence_lens_nwords_val[0],
-                                         sent_char_len_list_pl_val: sentence_lens_nchars_val[0]})
+                rind=np.random.randint(low=0,high=np.shape(onehot_words_val)[-1])
+                val_predictions_o_np, val_cost_o_np,summary_inf_test_o = sess.run(
+                    [out_o_val, test_cost,summary_inf_test], feed_dict={mask_kl_pl:kl_mask[ind],onehot_words_pl_val: onehot_words_val[rind], word_pos_pl_val: word_pos_val[rind],
+                                         perm_mat_pl_val: perm_mat_val[rind], sent_word_len_list_pl_val: sentence_lens_nwords_val[rind],
+                                         sent_char_len_list_pl_val: sentence_lens_nchars_val[rind]})
 
                 predictions = np.argmax(train_predictions_o_np[0:10],axis=-1)
                 ground_truth = np.argmax(onehot_words[batch][0:10], axis=-1)
@@ -216,7 +229,9 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
                 logger.debug('global step: {} Epoch: {} count: {} anneal:{}'.format(global_step_o_np,epoch,count,anneal_c_o))
                 logger.debug('train cost: {}'.format(train_cost_o_np))
                 logger.debug('validation cost {}'.format(val_cost_o_np))
-            if count % 10000==0:
+                summary_writer.add_summary(summary_inf_test_o, global_step_o_np)
+                summary_writer.flush()
+            if global_step_o_np % 1000==0:
                 # testing on the generative model
                 gen_o_np = sess.run([gen_samples])
 	        gen_pred = np.argmax(gen_o_np[0:10],axis=-1)	
