@@ -7,7 +7,7 @@ class Decoder:
         self.encodings =None
         self.num_sentence_characters = kwargs['num_sentence_characters']
         self.dict_length = kwargs['dict_length']
-        self.max_num_words= kwargs['max_num_words']
+        self.max_num_lat_words= kwargs['max_num_lat_words']
         self.batch_size=kwargs['batch_size']
         self.simple_decoder = True
         self.global_lat_decoder=False
@@ -52,7 +52,7 @@ class Decoder:
             print('here')
             conv_q = tf.reshape(tf.einsum('ij,jk->ik',queries, w1),[-1,1,self.lat_word_dim])
             print('here1')
-            a_p1= tf.reshape(tf.tile(conv_q,[1,1,self.max_num_words]),[self.batch_size,self.max_num_words,self.lat_word_dim])
+            a_p1= tf.reshape(tf.tile(conv_q,[1,1,self.max_num_lat_words]),[self.batch_size,self.max_num_lat_words,self.lat_word_dim])
             print('here2')
             print(w2)
             print('a p1 {}'.format(a_p1))
@@ -63,7 +63,7 @@ class Decoder:
             out = tf.einsum('k,ijk->ij',v,tf.nn.tanh(name='combine',x=a_p1+a_p2))
             print('MAT for softmax {}'.format(out))
             out_norm = tf.nn.softmax(out,dim=-1)
-            context = tf.reduce_sum(values*tf.reshape(tf.stack([out_norm for _ in range(self.lat_word_dim)],-1),[self.batch_size,self.max_num_words,self.lat_word_dim]),axis=-2)
+            context = tf.reduce_sum(values*tf.reshape(tf.stack([out_norm for _ in range(self.lat_word_dim)],-1),[self.batch_size,self.max_num_lat_words,self.lat_word_dim]),axis=-2)
             #context2 = tf.matmul(tf.reshape(tf.diag(out_norm),[-1,self.max_num_words]),tf.transpose(values,[-1,self.max_num_words]))
             #is this the same
             #print('ALT CONTEXT {}'.format(context2))
@@ -127,7 +127,7 @@ class Decoder:
                 next_loop_state = loop_state.write(time-1,prediction)
 		#next_input = tf.concat([prediction,_inputs_ta.read(time)],axis=-1)
         #argmax seems to be working a bit better, funny as it's not differentiable
-            	next_input = tf.concat([tf.one_hot(tf.argmax(prediction, -1), depth=self.dict_length, axis=-1), _inputs_ta.read(time)],axis=-1)
+                next_input = tf.concat([tf.one_hot(tf.argmax(prediction, -1), depth=self.dict_length, axis=-1), _inputs_ta.read(time)],axis=-1)
             elements_finished = (time >= sequence_length-1)
 
             return (elements_finished, next_input, next_cell_state,emit_output, next_loop_state)
@@ -146,7 +146,7 @@ class Decoder:
         return out, global_latent,global_logsig,global_mu
 
     def prior(self, values,num_units,global_latent,word_lens,reuse):
-        global_latent= tf.transpose(tf.stack([global_latent for _ in range(self.max_num_words)]),[1,0,2])
+        global_latent= tf.transpose(tf.stack([global_latent for _ in range(self.max_num_lat_words)]),[1,0,2])
         print(' PRIOR input dim from post {}'.format(values))
         values = tf.concat([tf.zeros(shape=[self.batch_size,1, self.lat_word_dim], dtype=tf.float32),values],axis=1)
         values = values[:,0:-1,:]
@@ -158,7 +158,7 @@ class Decoder:
         with tf.variable_scope('prior/rnn', reuse=reuse):
             w = tf.get_variable(name='prior_dense_w',shape=[self.lat_word_dim,self.lat_word_dim*2],dtype=tf.float32)
             b = tf.get_variable(name='prior_dense_b',shape=self.lat_word_dim*2,dtype=tf.float32)
-            out = tf.reshape(tf.matmul(tf.reshape(values,[-1,self.lat_word_dim]),w)+b,[self.batch_size,self.max_num_words,self.lat_word_dim*2])
+            out = tf.reshape(tf.matmul(tf.reshape(values,[-1,self.lat_word_dim]),w)+b,[self.batch_size,self.max_num_lat_words,self.lat_word_dim*2])
 
             mu,log_sig = tf.split(out,axis=-1,num_or_size_splits=2,name='prior_dense')
             print('MU{}'.format(mu))
@@ -268,7 +268,7 @@ class Decoder:
         return cost
 
     def generation(self,samples):
-            outputs_ta = tf.TensorArray(dtype=tf.float32, size=self.max_num_words)
+            outputs_ta = tf.TensorArray(dtype=tf.float32, size=self.max_num_lat_words)
             cell = tf.contrib.rnn.LSTMCell(self.decoder_units)
             print('GENER samples {}'.format(np.shape(samples)))
 
@@ -299,7 +299,7 @@ class Decoder:
 
                     next_loop_state = loop_state.write(time - 1, samples_word)
 
-                elements_finished = (time >= self.max_num_words)
+                elements_finished = (time >= self.max_num_lat_words)
 
                 return (elements_finished, next_input, next_cell_state, emit_output, next_loop_state)
 
