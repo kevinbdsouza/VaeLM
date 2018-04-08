@@ -220,15 +220,15 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
         inds = range(np.shape(onehot_words)[0])
         np.random.shuffle(inds)
         for count,batch in enumerate(inds):
-            anneal_c_o,train_predictions_o_np, train_cost_o_np, _, global_step_o_np,train_rec_cost_o_np,_,_,_,_,summary_inf_train_o=sess.run([anneal,out_o,cost,train_step,global_step,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,summary_inf_train],feed_dict={mask_kl_pl:kl_mask[batch],onehot_words_pl:onehot_words[batch],word_pos_pl:word_pos[batch],perm_mat_pl:perm_mat[batch],sent_word_len_list_pl:sentence_lens_nwords[batch],sent_char_len_list_pl:sentence_lens_nchars[batch]})
+            anneal_c_o,train_predictions_o_np, train_cost_o_np, _, global_step_o_np,train_rec_cost_o_np,_,_,_,_,summary_inf_train_o=sess.run([anneal,out_o,cost,train_step,global_step,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,summary_inf_train],feed_dict={mask_kl_pl:kl_mask[batch],onehot_words_pl:onehot_words[batch],word_pos_pl:word_pos[batch],perm_mat_pl:perm_mat[batch],sent_word_len_list_pl:lat_sent_len_list[batch],sent_char_len_list_pl:sentence_lens_nchars[batch]})
 	    #logger.debug('anneal const {}'.format(anneal_c))
             #logger.debug('ground truth {}'.format(get_output_sentences(index2token, ground_truth[0:10])))
-            if global_step_o_np % 10==0:
+            if global_step_o_np % 1000==0:
                 # testing on the validation set
                 rind=np.random.randint(low=0,high=np.shape(onehot_words_val)[-1])
                 val_predictions_o_np, val_cost_o_np,summary_inf_test_o = sess.run(
-                    [out_o_val, test_cost,summary_inf_test], feed_dict={mask_kl_pl:kl_mask[rind],onehot_words_pl_val: onehot_words_val[rind], word_pos_pl_val: word_pos_val[rind],
-                                         perm_mat_pl_val: perm_mat_val[rind], sent_word_len_list_pl_val: sentence_lens_nwords_val[rind],
+                    [out_o_val, test_cost,summary_inf_test], feed_dict={mask_kl_pl:kl_mask_val[rind],onehot_words_pl_val: onehot_words_val[rind], word_pos_pl_val: word_pos_val[rind],
+                                         perm_mat_pl_val: perm_mat_val[rind], sent_word_len_list_pl_val: lat_sent_len_list_val[rind],
                                          sent_char_len_list_pl_val: sentence_lens_nchars_val[rind]})
 
                 predictions = np.argmax(train_predictions_o_np[0:10],axis=-1)
@@ -241,7 +241,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
                 logger.debug('validation cost {}'.format(val_cost_o_np))
                 summary_writer.add_summary(summary_inf_test_o, global_step_o_np)
                 summary_writer.flush()
-            if global_step_o_np % 1000==0:
+            if global_step_o_np % 10000==0:
                 # testing on the generative model
                 gen_o_np = sess.run([gen_samples])
 	        gen_pred = np.argmax(gen_o_np[0:10],axis=-1)	
