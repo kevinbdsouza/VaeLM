@@ -280,7 +280,7 @@ class Decoder:
                     next_loop_state = outputs_ta
 
                     #self.lat_word_dim is very important, need from kevin
-                    next_input = tf.concat([samples,tf.zeros(shape=[self.batch_size,self.lat_word_dim],dtype=tf.float32)],axis=-1)
+                    next_input = tf.concat([tf.zeros(shape=[self.batch_size,self.lat_word_dim],dtype=tf.float32),samples],axis=-1)
 
                 else:
                     next_cell_state = cell_state
@@ -294,7 +294,7 @@ class Decoder:
                     eps = tf.random_normal(shape=[self.batch_size,self.lat_word_dim],dtype=tf.float32)
                     samples_word = eps*tf.exp(logsig)+mu
 
-                    next_input = tf.concat([samples,samples_word],axis=-1)
+                    next_input = tf.concat([samples_word,samples],axis=-1)
 
                     next_loop_state = loop_state.write(time - 1, samples_word)
 
