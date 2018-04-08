@@ -122,7 +122,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     kl_mask = []
     for word_len in np.reshape(sentence_lens_nwords,-1):
         vec = np.zeros([max_word_len],dtype=np.float32)
-        vec[0:word_len] = np.ones(shape=word_len,dtype=tf.float32)
+        vec[0:word_len] = np.ones(shape=word_len,dtype=np.float32)
         kl_mask.append(vec)
     kl_mask = np.asarray(kl_mask)
     kl_mask = np.reshape(kl_mask,newshape=[-1,batch_size])
