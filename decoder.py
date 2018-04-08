@@ -125,9 +125,9 @@ class Decoder:
                 next_cell_state = cell_state
                 prediction = tf.layers.dense(inputs=cell_output,activation=None,units=self.dict_length)
                 next_loop_state = loop_state.write(time-1,prediction)
-		#next_input = tf.concat([prediction,_inputs_ta.read(time)],axis=-1)
+		next_input = tf.concat([prediction,_inputs_ta.read(time)],axis=-1)
         #argmax seems to be working a bit better, funny as it's not differentiable
-                next_input = tf.concat([tf.one_hot(tf.argmax(prediction, -1), depth=self.dict_length, axis=-1), _inputs_ta.read(time)],axis=-1)
+                #next_input = tf.concat([tf.one_hot(tf.argmax(prediction, -1), depth=self.dict_length, axis=-1), _inputs_ta.read(time)],axis=-1)
             elements_finished = (time >= sequence_length-1)
 
             return (elements_finished, next_input, next_cell_state,emit_output, next_loop_state)
@@ -202,8 +202,7 @@ class Decoder:
         if kl:
             kl_p3 = kl_p2 + kl_global_lat
             anneal_c = tf.cast(tf.minimum(tf.maximum(tf.divide((global_step-shift),total_steps),0),1),dtype=tf.float32)
-            kl_p3 = kl_p3
-                    #*anneal_c
+            kl_p3 = kl_p3*anneal_c
         else:
             anneal_c=0
             kl_p3 = tf.constant(0,dtype=tf.float32)
