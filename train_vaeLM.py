@@ -130,7 +130,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     kl_mask = np.reshape(kl_mask,newshape=[-1,batch_size,max_lat_word_len])
     sentence_lens_nwords = np.reshape(sentence_lens_nwords,newshape=[-1,batch_size])
     sentence_lens_nchars = np.reshape(sentence_lens_nchars,newshape=[-1,batch_size])
-
+    lat_sent_len_list  =np.reshape(lat_sent_len_list ,[-1,batch_size])
 
     #shaping for validation set
     batch_size_val = batch_size
@@ -181,7 +181,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     kl_mask_val = np.asarray(kl_mask_val)
     kl_mask_val = np.reshape(kl_mask_val,newshape=[-1,batch_size,max_lat_word_len])
 
-    lat_sent_len_list_val = np.reshape(lat_sent_len_list_val[0:n_valid_use],newshape=[-1,batch_size_val])
+    lat_sent_len_list_val = np.reshape(np.reshape(lat_sent_len_list_val,-1)[0:n_valid_use],newshape=[-1,batch_size_val])
     word_state_out_val, mean_state_out_val, logsig_state_out_val = encoder_k.run_encoder(inputs=onehot_words_pl_val, word_pos=word_pos_pl_val,reuse=True)
     word_state_out_val.set_shape([max_char_len,batch_size_val,hidden_size])
     mean_state_out_val.set_shape([max_char_len,batch_size_val,hidden_size])
