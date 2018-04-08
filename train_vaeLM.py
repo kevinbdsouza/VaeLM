@@ -141,12 +141,12 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     #might have to fix this before reporting results
     onehot_words_val = np.reshape(onehot_words_val[0:n_valid_use,...],newshape=[-1,batch_size_val,max_char_len,vocabulary_size])
     word_pos_val = np.reshape(word_pos_val[0:n_valid_use,...],newshape=[-1,batch_size_val,max_char_len])
-    sentence_lens_nwords_val = np.reshape(sentence_lens_nwords_val[0:n_valid_use],newshape=[-1,batch_size_val])
+    #sentence_lens_nwords_val = np.reshape(sentence_lens_nwords_val[0:n_valid_use],newshape=[-1,batch_size_val])
     sentence_lens_nchars_val = np.reshape(sentence_lens_nchars_val[0:n_valid_use],newshape=[-1,batch_size_val])
 
     ###KL annealing parameters
-    shift = 10000
-    total_steps = np.round(np.true_divide(n_epochs,5)*np.shape(onehot_words)[0],decimals=0)
+    shift = 5000
+    total_steps = np.round(np.true_divide(n_epochs,16)*np.shape(onehot_words)[0],decimals=0)
 
     ####
     cost,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal = decoder.calc_cost(mask_kl=mask_kl_pl,kl=True,sentence_word_lens=sent_word_len_list_pl,shift=shift,total_steps=total_steps,global_step=global_step,global_latent_sample=global_latent_o,global_logsig=global_logsig_o,global_mu=global_mu_o,predictions=out_o,true_input=onehot_words_pl,posterior_logsig=logsig_state_out_p,posterior_mu=mean_state_out_p,post_samples=word_state_out_p,reuse=None)
@@ -172,8 +172,16 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
 
     #testing graph
     word_state_out_val, mean_state_out_val, logsig_state_out_val = encoder_k.run_encoder(inputs=onehot_words_pl_val, word_pos=word_pos_pl_val,reuse=True)
-    perm_mat_val,_,sent_len_list_val = prep_perm_matrix(batch_size=batch_size_val,word_pos_matrix=word_pos_val,max_char_len=max_char_len,max_word_len=max_lat_word_len)
+    perm_mat_val,_,lat_sent_len_list_val = prep_perm_matrix(batch_size=batch_size_val,word_pos_matrix=word_pos_val,max_char_len=max_char_len,max_word_len=max_lat_word_len)
+    kl_mask_val = []
+    for word_len in np.reshape(lat_sent_len_list_val,-1):
+        vec = np.zeros([max_lat_word_len],dtype=np.float32)
+        vec[0:word_len] = np.ones(shape=word_len,dtype=np.float32)
+        kl_mask_val.append(vec)
+    kl_mask_val = np.asarray(kl_mask_val)
+    kl_mask_val = np.reshape(kl_mask_val,newshape=[-1,batch_size,max_lat_word_len])
 
+    lat_sent_len_list_val = np.reshape(lat_sent_len_list_val[0:n_valid_use],newshape=[-1,batch_size_val])
     word_state_out_val, mean_state_out_val, logsig_state_out_val = encoder_k.run_encoder(inputs=onehot_words_pl_val, word_pos=word_pos_pl_val,reuse=True)
     word_state_out_val.set_shape([max_char_len,batch_size_val,hidden_size])
     mean_state_out_val.set_shape([max_char_len,batch_size_val,hidden_size])
