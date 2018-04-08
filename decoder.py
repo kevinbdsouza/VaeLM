@@ -257,7 +257,7 @@ class Decoder:
         var_g = var_g[-1]
         self.sum_global_activ_hist = tf.summary.histogram('active_lats_global', var_g)
 
-        return cost,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal_c
+        return cost,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal_c,prior_mu
 
     def test_calc_cost(self,mask_kl,posterior_logsig,post_samples,global_mu,global_logsig,global_latent_sample,posterior_mu,true_input,predictions,sentence_word_lens):
         prior_mu,prior_logsig = self.prior(values=post_samples,num_units=self.units_encoder_lstm,global_latent=global_latent_sample,word_lens=sentence_word_lens,reuse=True)
