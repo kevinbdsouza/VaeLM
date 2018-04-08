@@ -127,7 +127,7 @@ class Decoder:
                 next_loop_state = loop_state.write(time-1,prediction)
 		#next_input = tf.concat([prediction,_inputs_ta.read(time)],axis=-1)
         #argmax seems to be working a bit better, funny as it's not differentiable
-            next_input = tf.concat([tf.one_hot(tf.argmax(prediction, -1), depth=self.dict_length, axis=-1), _inputs_ta.read(time)],axis=-1)
+            	next_input = tf.concat([tf.one_hot(tf.argmax(prediction, -1), depth=self.dict_length, axis=-1), _inputs_ta.read(time)],axis=-1)
             elements_finished = (time >= sequence_length-1)
 
             return (elements_finished, next_input, next_cell_state,emit_output, next_loop_state)
