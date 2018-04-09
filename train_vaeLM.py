@@ -233,12 +233,20 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
 
                 predictions = np.argmax(train_predictions_o_np[0:10],axis=-1)
                 ground_truth = np.argmax(onehot_words[batch][0:10], axis=-1)
+                val_predictions = np.argmax(val_predictions_o_np,axis=-1)
+                true= np.argmax(onehot_words_val[rind],-1)
+                num =np.sum([np.sum(val_predictions[j][0:i] == true[j][0:i]) for j,i in enumerate(sentence_lens_nchars_val[rind])])
 
+                denom = np.sum(sentence_lens_nchars_val[rind])
+                accuracy = np.true_divide(num,denom)*100
+                logger.debug('accuracy on random val batch {}'.format(accuracy))
                 logger.debug('predictions {}'.format([[index2token[j] for j in i] for i in predictions[0:10,0:50]]))
                 logger.debug('ground truth {}'.format([[index2token[j] for j in i] for i in ground_truth[0:10,0:50]]))
                 logger.debug('global step: {} Epoch: {} count: {} anneal:{}'.format(global_step_o_np,epoch,count,anneal_c_o))
                 logger.debug('train cost: {}'.format(train_cost_o_np))
                 logger.debug('validation cost {}'.format(val_cost_o_np))
+                logger.debug('validation predictions {}'.format([[index2token[j] for j in i] for i in val_predictions[0:10,0:50]]))
+
                 summary_writer.add_summary(summary_inf_test_o, global_step_o_np)
                 summary_writer.flush()
             if global_step_o_np % 10000==0:
