@@ -206,7 +206,7 @@ class Encoder:
 
 
 	# our [494, 52, 61] tensor becomes [[52, 61], [52, 61], ...]
-	def run_encoder(self,inputs,word_pos,reuse):
+	def run_encoder(self,train,inputs,word_pos,reuse):
 	#input projections
 		inputs = tf.reshape(inputs,[-1,self.vocabulary_size])
 		with tf.variable_scope('projection',reuse=reuse):
@@ -255,9 +255,11 @@ class Encoder:
 		        z_sample = tf.multiply(z_sample,word_slice)
 		        z_mean = tf.multiply(z_mean,word_slice)
 		        z_log_sigma_sq = tf.multiply(z_log_sigma_sq,word_slice)
-		        
-		        next_cell_state = z_sample
-		        sample_loop_state = loop_state[0].write(time - 1, next_cell_state)
+		        if train:
+		            next_cell_state = z_sample
+		        else:
+			    next_cell_state = z_mean
+			sample_loop_state = loop_state[0].write(time - 1, next_cell_state)
 		        mean_loop_state = loop_state[1].write(time - 1, z_mean)
 		        sigma_loop_state = loop_state[2].write(time - 1, z_log_sigma_sq)
 		        next_loop_state = (sample_loop_state,mean_loop_state,sigma_loop_state)

@@ -96,7 +96,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     global_step = tf.Variable(0, name='global_step', trainable=False)
 
 
-    word_state_out, mean_state_out, logsig_state_out = encoder_k.run_encoder(inputs=onehot_words_pl, word_pos=word_pos_pl,reuse=None)
+    word_state_out, mean_state_out, logsig_state_out = encoder_k.run_encoder(train=True,inputs=onehot_words_pl, word_pos=word_pos_pl,reuse=None)
 
     #picking out our words
     #why do these all start at 0?
@@ -171,7 +171,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     sent_char_len_list_pl_val= tf.placeholder(name='sent_char_len_list_val',dtype=tf.float32,shape=[batch_size])
 
     #testing graph
-    word_state_out_val, mean_state_out_val, logsig_state_out_val = encoder_k.run_encoder(inputs=onehot_words_pl_val, word_pos=word_pos_pl_val,reuse=True)
+    word_state_out_val, mean_state_out_val, logsig_state_out_val = encoder_k.run_encoder(train=False,inputs=onehot_words_pl_val, word_pos=word_pos_pl_val,reuse=True)
     perm_mat_val,_,lat_sent_len_list_val = prep_perm_matrix(batch_size=batch_size_val,word_pos_matrix=word_pos_val,max_char_len=max_char_len,max_word_len=max_lat_word_len)
     kl_mask_val = []
     for word_len in np.reshape(lat_sent_len_list_val,-1):
