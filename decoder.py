@@ -21,6 +21,8 @@ class Decoder:
         pre_dist1 = tf.layers.dense(inputs=mean_pool,activation=tf.nn.relu, units=units_dense)
         pre_dist2 = tf.layers.dense(inputs=pre_dist1,activation=None,units=units_dense*2)
         mu, log_sig = tf.split(tf.cast(pre_dist2,dtype=tf.float32),axis=-1,num_or_size_splits=2)
+	mu = mu*10
+	log_sig=log_sig-3
         return mu, log_sig
 
     def decoder1_p1(self,reuse,units_bilstm,encodings=None):
