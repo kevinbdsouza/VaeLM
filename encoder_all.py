@@ -271,7 +271,7 @@ class Encoder:
 		        next_sampled_input =  tf.multiply(cell_output,word_slice)
 		        
 		        #reparametrization
-		        z_concat = tf.contrib.layers.fully_connected(next_sampled_input,2*self.hidden_size)
+		        z_concat = tf.contrib.layers.fully_connected(next_sampled_input,2*self.hidden_size,activation_fn=None)
 		        z_mean = z_concat[:,:20]
 		        z_log_sigma_sq =  z_concat[:,20:40]
 		        eps = tf.random_normal((batch_size,hidden_size),0,1,dtype=tf.float32)
