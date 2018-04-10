@@ -25,6 +25,7 @@ def experiment(exp_name):
 	batch_size = 40
 	hidden_size = 256
 	decoder_dim = 256
+	decoder_units_p3=256
 	vocabulary = ["<SOS>"] + ["a"] + ["b"] + ["c"] + ["d"] + ["e"] + ["f"] + \
 	["g"] + ["h"] + ["i"] + ["j"] + ["k"] + ["l"] + ["m"] + ["n"] + ["o"] + \
 	["p"] + ["q"] + ["r"] + ["s"] + ["t"] + ["u"] + ["v"] + ["w"] + \
@@ -37,9 +38,9 @@ def experiment(exp_name):
 	index2token = {index:token for index,token in enumerate(vocabulary)}
 
 
-	train_dict = {'batch_size': batch_size, 'hidden_size': hidden_size, 'decoder_dim': decoder_dim, 'max_char_len': max_char_len,'onehot_words': onehot_words, 'word_pos': word_pos, 'sentence_lens_nchars': sentence_lens_nchars,'vocabulary_size': vocabulary_size, 'sentence_lens_nwords': sentence_lens_nwords,'onehot_words_val': onehot_words_val, 'word_pos_val': word_pos_val,'sentence_lens_nchars_val': sentence_lens_nchars_val, 'sentence_lens_nwords_val': sentence_lens_nwords_val}
+	train_dict = {'decoder_units_p3':decoder_units_p3,'batch_size': batch_size, 'hidden_size': hidden_size, 'decoder_dim': decoder_dim, 'max_char_len': max_char_len,'onehot_words': onehot_words, 'word_pos': word_pos, 'sentence_lens_nchars': sentence_lens_nchars,'vocabulary_size': vocabulary_size, 'sentence_lens_nwords': sentence_lens_nwords,'onehot_words_val': onehot_words_val, 'word_pos_val': word_pos_val,'sentence_lens_nchars_val': sentence_lens_nchars_val, 'sentence_lens_nwords_val': sentence_lens_nwords_val}
 
-	network_dict = {'max_char_len': max_char_len, 'batch_size': batch_size,'hidden_size': hidden_size}
+	network_dict = {'vocabulary_size':vocabulary_size,'max_char_len': max_char_len, 'batch_size': batch_size,'hidden_size': hidden_size}
 
 
 	print("start")
