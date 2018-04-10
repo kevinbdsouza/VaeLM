@@ -70,7 +70,7 @@ def train(log_dir, n_epochs, network_dict, index2token, **kwargs):
     hidden_size = kwargs['hidden_size']
     decoder_dim = kwargs['decoder_dim']
     decoder_units_p3 = kwargs['decoder_units_p3']
-    num_batches = len(onehot_words) // batch_size
+    #num_batches = len(onehot_words) // batch_size
     network_dict['input_size'] = input_size
 
     max_word_len = np.max(sentence_lens_nwords)
@@ -79,10 +79,10 @@ def train(log_dir, n_epochs, network_dict, index2token, **kwargs):
 
     # onehot_words,word_pos,vocabulary_size = encoder_k.run_preprocess()
     # prepping permutation matrix for all instances seperately
-    perm_mat, max_lat_word_len, lat_sent_len_list = prep_perm_matrix(batch_size=batch_size, word_pos_matrix=word_pos,
-                                                                     max_char_len=max_char_len)
+    perm_mat, max_lat_word_len, lat_sent_len_list = prep_perm_matrix(batch_size=batch_size, word_pos_matrix=word_pos,max_char_len=max_char_len)
 
     # placeholders
+    eow_mask_pl = tf.placeholder(name='eow_mask',dtype=tf.float32,shape =[batch_size, max_char_len] )
     mask_kl_pl = tf.placeholder(name='kl_pl_mask', dtype=tf.float32, shape=[batch_size, max_lat_word_len])
     sent_word_len_list_pl = tf.placeholder(name='word_lens', dtype=tf.int32, shape=[batch_size])
     perm_mat_pl = tf.placeholder(name='perm_mat_pl', dtype=tf.int32, shape=[batch_size, max_lat_word_len])
@@ -132,6 +132,8 @@ def train(log_dir, n_epochs, network_dict, index2token, **kwargs):
     # reshape problem
 
     onehot_words = np.reshape(onehot_words, newshape=[-1, batch_size, max_char_len, vocabulary_size])
+
+
     word_pos = np.reshape(word_pos, newshape=[-1, batch_size, max_char_len])
     # making word masks for kl term
     kl_mask = []
@@ -143,7 +145,21 @@ def train(log_dir, n_epochs, network_dict, index2token, **kwargs):
     kl_mask = np.asarray(kl_mask)
     kl_mask = np.reshape(kl_mask, newshape=[-1, batch_size, max_lat_word_len])
     sentence_lens_nwords = np.reshape(sentence_lens_nwords, newshape=[-1, batch_size])
+
+
     sentence_lens_nchars = np.reshape(sentence_lens_nchars, newshape=[-1, batch_size])
+    # EOW WORD MASK
+    eow_mask=[]
+    for batch,batch_len in enumerate(sentence_lens_nwords):
+        mat=np.ones(shape=[batch_size,max_char_len],dtype=np.float32)
+        for ex, len in enumerate(batch_len):
+            mat[ex,:]=np.sum(onehot_words[batch, ex,:,]*np.true_divide(2,len),-1)
+
+        eow_mask.append(mat)
+
+    eow_mask = np.reshape(np.asarray(eow_mask),[-1, batch_size, max_char_len])
+    print('EOW 1 {}'.format(np.shape(eow_mask)))
+
     lat_sent_len_list = np.reshape(lat_sent_len_list, [-1, batch_size])
 
     # shaping for validation set
@@ -160,11 +176,11 @@ def train(log_dir, n_epochs, network_dict, index2token, **kwargs):
     sentence_lens_nchars_val = np.reshape(sentence_lens_nchars_val[0:n_valid_use], newshape=[-1, batch_size_val])
 
     ###KL annealing parameters
-    shift = 5000
+    shift = 500
     total_steps = np.round(np.true_divide(n_epochs, 16) * np.shape(onehot_words)[0], decimals=0)
 
     ####
-    cost, reconstruction, kl_p3, kl_p1, kl_global, kl_p2, anneal, _ = decoder.calc_cost(mask_kl=mask_kl_pl, kl=True,
+    cost, reconstruction, kl_p3, kl_p1, kl_global, kl_p2, anneal, _ = decoder.calc_cost(mask_kl=mask_kl_pl,eow_mask=eow_mask_pl, kl=True,
                                                                                         sentence_word_lens=sent_word_len_list_pl,
                                                                                         shift=shift,
                                                                                         total_steps=total_steps,
@@ -275,7 +291,7 @@ def train(log_dir, n_epochs, network_dict, index2token, **kwargs):
         for count, batch in enumerate(inds):
             anneal_c_o, train_predictions_o_np, train_cost_o_np, _, global_step_o_np, train_rec_cost_o_np, _, _, _, _, summary_inf_train_o = sess.run(
                 [anneal, out_o, cost, train_step, global_step, reconstruction, kl_p3, kl_p1, kl_global, kl_p2,
-                 summary_inf_train], feed_dict={mask_kl_pl: kl_mask[batch], onehot_words_pl: onehot_words[batch],
+                 summary_inf_train], feed_dict={eow_mask_pl:eow_mask[batch],mask_kl_pl: kl_mask[batch], onehot_words_pl: onehot_words[batch],
                                                 word_pos_pl: word_pos[batch], perm_mat_pl: perm_mat[batch],
                                                 sent_word_len_list_pl: lat_sent_len_list[batch],
                                                 sent_char_len_list_pl: sentence_lens_nchars[batch]})

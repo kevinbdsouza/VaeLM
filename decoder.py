@@ -185,13 +185,12 @@ class Decoder:
             print('MU{}'.format(mu))
         return [mu, log_sig]
 
-    def cost_function(self, mask_kl, predictions, true_input, global_mu, global_logsig, prior_mu, prior_logsig,
+    def cost_function(self,eow_mask, mask_kl, predictions, true_input, global_mu, global_logsig, prior_mu, prior_logsig,
                       posterior_mu, posterior_logsig, shift, total_steps, global_step, kl=True):
         mask = tf.reduce_sum(true_input, -1)
         # reconstruction = tf.reduce_sum(tf.reduce_sum(-true_input*tf.log(predictions+1e-9),axis=-1),-1)
-        reconstruction = tf.reduce_sum(
-            tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(true_input, -1), logits=predictions) * mask,
-            -1)
+        reconstruction = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(true_input, -1), logits=predictions) * mask
+        reconstruction = tf.reduce_sum(reconstruction*eow_mask,-1)
         # have to be very careful of order of the mean/stddev parmeters
         # outer reduce sum for each KL term
         '''
@@ -278,12 +277,12 @@ class Decoder:
         cost = tf.reduce_mean(kl_p3 + reconstruction)
         return cost, reconstruction, kl_p3, kl_p1
 
-    def calc_cost(self, mask_kl, kl, posterior_logsig, post_samples, global_mu, global_logsig, global_latent_sample,
+    def calc_cost(self,eow_mask, mask_kl, kl, posterior_logsig, post_samples, global_mu, global_logsig, global_latent_sample,
                   posterior_mu, true_input, sentence_word_lens, predictions, shift, total_steps, global_step, reuse):
         prior_mu, prior_logsig = self.prior(values=post_samples, num_units=self.units_encoder_lstm,
                                             global_latent=global_latent_sample, word_lens=sentence_word_lens,
                                             reuse=reuse)
-        cost, reconstruction, kl_p3, kl_p1, kl_global, kl_p2, anneal_c = self.cost_function(mask_kl=mask_kl, kl=kl,
+        cost, reconstruction, kl_p3, kl_p1, kl_global, kl_p2, anneal_c = self.cost_function(eow_mask=eow_mask,mask_kl=mask_kl, kl=kl,
                                                                                             predictions=predictions,
                                                                                             true_input=true_input,
                                                                                             global_mu=global_mu,
