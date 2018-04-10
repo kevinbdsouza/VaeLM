@@ -153,7 +153,7 @@ def train(log_dir, n_epochs, network_dict, index2token, **kwargs):
     for batch,batch_len in enumerate(sentence_lens_nwords):
         mat=np.ones(shape=[batch_size,max_char_len],dtype=np.float32)
         for ex, len in enumerate(batch_len):
-            onehot_words[batch, ex, :,27] = onehot_words[batch, ex, :,27]*len*0.05
+            onehot_words[batch, ex, :,27] = onehot_words[batch, ex, :,27]*np.true_divide(1,len)*0.5
 
             mat[ex,:]=np.sum(onehot_words[batch,ex,:,:],-1)
 
