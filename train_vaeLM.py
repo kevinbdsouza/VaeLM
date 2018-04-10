@@ -1,3 +1,4 @@
+import re
 import logging
 from decoder import Decoder
 import encoder
@@ -161,6 +162,10 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     grads_t, vars_t = zip(*opt.compute_gradients(cost))
     clipped_grads_t, grad_norm_t = tf.clip_by_global_norm(grads_t, clip_norm=5.0)
     train_step = opt.apply_gradients(zip(clipped_grads_t, vars_t), global_step=global_step)
+    regex = re.compile('[^a-zA-Z]')
+    sum_grad_hist = [tf.summary.histogram(name=regex.sub('',str(j)),values=i) for i,j in zip(clipped_grads_t,vars_t)]
+    norm_grad = tf.summary.scalar(name='grad_norm',tensor=grad_norm_t)
+
     ######
     #testing stuff
     #testing pls
@@ -182,7 +187,6 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     kl_mask_val = np.reshape(kl_mask_val,newshape=[-1,batch_size,max_lat_word_len])
 
     lat_sent_len_list_val = np.reshape(np.reshape(lat_sent_len_list_val,-1)[0:n_valid_use],newshape=[-1,batch_size_val])
-    word_state_out_val, mean_state_out_val, logsig_state_out_val = encoder_k.run_encoder(inputs=onehot_words_pl_val, word_pos=word_pos_pl_val,reuse=True)
     word_state_out_val.set_shape([max_char_len,batch_size_val,hidden_size])
     mean_state_out_val.set_shape([max_char_len,batch_size_val,hidden_size])
     logsig_state_out.set_shape([max_char_len,batch_size_val,hidden_size])
@@ -205,7 +209,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
 
     ######
     #tensorboard stuff
-    summary_inf_train = tf.summary.merge([decoder.kls_hist,decoder.global_kl_scalar,decoder.rec_scalar,decoder.cost_scalar,decoder.full_kl_scalar,decoder.sum_all_activ_hist,decoder.sum_global_activ_hist])
+    summary_inf_train = tf.summary.merge([sum_grad_hist,norm_grad,decoder.kls_hist,decoder.global_kl_scalar,decoder.rec_scalar,decoder.cost_scalar,decoder.full_kl_scalar,decoder.sum_all_activ_hist,decoder.sum_global_activ_hist])
     summary_inf_test = tf.summary.merge([decoder.sum_rec_val,decoder.sum_kl_val])
     summary_writer = tf.summary.FileWriter(log_dir, sess.graph)
     ######
@@ -223,7 +227,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
             anneal_c_o,train_predictions_o_np, train_cost_o_np, _, global_step_o_np,train_rec_cost_o_np,_,_,_,_,summary_inf_train_o=sess.run([anneal,out_o,cost,train_step,global_step,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,summary_inf_train],feed_dict={mask_kl_pl:kl_mask[batch],onehot_words_pl:onehot_words[batch],word_pos_pl:word_pos[batch],perm_mat_pl:perm_mat[batch],sent_word_len_list_pl:lat_sent_len_list[batch],sent_char_len_list_pl:sentence_lens_nchars[batch]})
 	    #logger.debug('anneal const {}'.format(anneal_c))
             #logger.debug('ground truth {}'.format(get_output_sentences(index2token, ground_truth[0:10])))
-            if global_step_o_np % 1000==0:
+            if global_step_o_np %1==0:
                 # testing on the validation set
                 rind=np.random.randint(low=0,high=np.shape(onehot_words_val)[-1])
                 val_predictions_o_np, val_cost_o_np,summary_inf_test_o = sess.run(
@@ -233,23 +237,22 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
 
                 predictions = np.argmax(train_predictions_o_np[0:10],axis=-1)
                 ground_truth = np.argmax(onehot_words[batch][0:10], axis=-1)
-                val_predictions = np.argmax(val_predictions_o_np,axis=-1)
-                true= np.argmax(onehot_words_val[rind],-1)
-                num =np.sum([np.sum(val_predictions[j][0:i] == true[j][0:i]) for j,i in enumerate(sentence_lens_nchars_val[rind])])
-
-                denom = np.sum(sentence_lens_nchars_val[rind])
-                accuracy = np.true_divide(num,denom)*100
-                logger.debug('accuracy on random val batch {}'.format(accuracy))
+		val_predictions = np.argmax(val_predictions_o_np,axis=-1)
+		true= np.argmax(onehot_words_val[rind],-1)
+		num =np.sum([np.sum(val_predictions[j][0:i] == true[j][0:i]) for j,i in enumerate(sentence_lens_nchars_val[rind])])
+		
+		denom = np.sum(sentence_lens_nchars_val[rind])
+		accuracy = np.true_divide(num,denom)*100
+		logger.debug('accuracy on random val batch {}'.format(accuracy))
                 logger.debug('predictions {}'.format([[index2token[j] for j in i] for i in predictions[0:10,0:50]]))
                 logger.debug('ground truth {}'.format([[index2token[j] for j in i] for i in ground_truth[0:10,0:50]]))
                 logger.debug('global step: {} Epoch: {} count: {} anneal:{}'.format(global_step_o_np,epoch,count,anneal_c_o))
                 logger.debug('train cost: {}'.format(train_cost_o_np))
                 logger.debug('validation cost {}'.format(val_cost_o_np))
-                logger.debug('validation predictions {}'.format([[index2token[j] for j in i] for i in val_predictions[0:10,0:50]]))
-
+		logger.debug('validation predictions {}'.format([[index2token[j] for j in i] for i in val_predictions[0:10,0:50]]))
                 summary_writer.add_summary(summary_inf_test_o, global_step_o_np)
                 summary_writer.flush()
-            if global_step_o_np % 10000==0:
+            if global_step_o_np % 1000==0:
                 # testing on the generative model
                 gen_o_np = sess.run([gen_samples])
 	        gen_pred = np.argmax(gen_o_np[0:10],axis=-1)	
