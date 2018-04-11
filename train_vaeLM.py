@@ -101,7 +101,7 @@ def train(log_dir, n_epochs, network_dict, index2token, **kwargs):
     global_step = tf.Variable(0, name='global_step', trainable=False)
 
     word_state_out, mean_state_out, logsig_state_out = encoder_k.run_encoder(train=True, inputs=onehot_words_pl,
-                                                                             word_pos=word_pos_pl, reuse=None)
+                                                                             word_pos=word_pos_pl, sentence_lens=sent_char_len_list_pl,reuse=None)
 
     # picking out our words
     # why do these all start at 0?
@@ -226,6 +226,7 @@ def train(log_dir, n_epochs, network_dict, index2token, **kwargs):
     word_state_out_val, mean_state_out_val, logsig_state_out_val = encoder_k.run_encoder(train=False,
                                                                                          inputs=onehot_words_pl_val,
                                                                                          word_pos=word_pos_pl_val,
+                                                                                         sentence_lens=sent_char_len_list_pl_val,
                                                                                          reuse=True)
     perm_mat_val, _, lat_sent_len_list_val = prep_perm_matrix(batch_size=batch_size_val, word_pos_matrix=word_pos_val,
                                                               max_char_len=max_char_len, max_word_len=max_lat_word_len)
@@ -288,7 +289,7 @@ def train(log_dir, n_epochs, network_dict, index2token, **kwargs):
     logger.addHandler(hdlr)
     logger.setLevel(logging.DEBUG)
     for epoch in range(n_epochs):
-        inds = range(np.shape(onehot_words)[0])
+        inds = list(range(np.shape(onehot_words)[0]))
         np.random.shuffle(inds)
         for count, batch in enumerate(inds):
             anneal_c_o, train_predictions_o_np, train_cost_o_np, _, global_step_o_np, train_rec_cost_o_np, _, _, _, _, summary_inf_train_o = sess.run(
