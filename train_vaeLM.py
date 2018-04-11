@@ -182,7 +182,7 @@ def train(log_dir, n_epochs, network_dict, index2token, **kwargs):
     total_steps = np.round(np.true_divide(n_epochs, 16) * np.shape(onehot_words)[0], decimals=0)
 
     ####
-    cost, reconstruction, kl_p3, kl_p1, kl_global, kl_p2, anneal, _ = decoder.calc_cost(mask_kl=mask_kl_pl,eow_mask=eow_mask_pl, kl=True,
+    cost, reconstruction, kl_p3, kl_p1, kl_global, kl_p2, anneal, _ = decoder.calc_cost(mask_kl=mask_kl_pl,eow_mask=None, kl=True,
                                                                                         sentence_word_lens=sent_word_len_list_pl,
                                                                                         shift=shift,
                                                                                         total_steps=total_steps,
@@ -293,7 +293,7 @@ def train(log_dir, n_epochs, network_dict, index2token, **kwargs):
         for count, batch in enumerate(inds):
             anneal_c_o, train_predictions_o_np, train_cost_o_np, _, global_step_o_np, train_rec_cost_o_np, _, _, _, _, summary_inf_train_o = sess.run(
                 [anneal, out_o, cost, train_step, global_step, reconstruction, kl_p3, kl_p1, kl_global, kl_p2,
-                 summary_inf_train], feed_dict={eow_mask_pl:eow_mask[batch],mask_kl_pl: kl_mask[batch], onehot_words_pl: onehot_words[batch],
+                 summary_inf_train], feed_dict={mask_kl_pl: kl_mask[batch], onehot_words_pl: onehot_words[batch],
                                                 word_pos_pl: word_pos[batch], perm_mat_pl: perm_mat[batch],
                                                 sent_word_len_list_pl: lat_sent_len_list[batch],
                                                 sent_char_len_list_pl: sentence_lens_nchars[batch]})
