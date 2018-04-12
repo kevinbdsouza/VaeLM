@@ -8,7 +8,7 @@ class Decoder:
         self.encodings = None
         self.num_sentence_characters = kwargs['num_sentence_characters']
         self.dict_length = kwargs['dict_length']
-        self.max_num_words = kwargs['max_num_words']
+        self.max_num_lat_words = kwargs['max_num_lat_words']
         self.batch_size = kwargs['batch_size']
         self.simple_decoder = True
         self.global_lat_decoder = False
@@ -23,6 +23,8 @@ class Decoder:
         pre_dist1 = tf.layers.dense(inputs=mean_pool, activation=tf.nn.relu, units=units_dense)
         pre_dist2 = tf.layers.dense(inputs=pre_dist1, activation=None, units=units_dense * 2)
         mu, log_sig = tf.split(tf.cast(pre_dist2, dtype=tf.float32), axis=-1, num_or_size_splits=2)
+        mu = mu * 10
+        log_sig = log_sig - 3
         return mu, log_sig
 
     def decoder1_p1(self, reuse, units_bilstm, encodings=None):
@@ -56,8 +58,8 @@ class Decoder:
             print('here')
             conv_q = tf.reshape(tf.einsum('ij,jk->ik', queries, w1), [-1, 1, self.lat_word_dim])
             print('here1')
-            a_p1 = tf.reshape(tf.tile(conv_q, [1, 1, self.max_num_words]),
-                              [self.batch_size, self.max_num_words, self.lat_word_dim])
+            a_p1 = tf.reshape(tf.tile(conv_q, [1, 1, self.max_num_lat_words]),
+                              [self.batch_size, self.max_num_lat_words, self.lat_word_dim])
             print('here2')
             print(w2)
             print('a p1 {}'.format(a_p1))
@@ -69,7 +71,7 @@ class Decoder:
             print('MAT for softmax {}'.format(out))
             out_norm = tf.nn.softmax(out, dim=-1)
             context = tf.reduce_sum(values * tf.reshape(tf.stack([out_norm for _ in range(self.lat_word_dim)], -1),
-                                                        [self.batch_size, self.max_num_words, self.lat_word_dim]),
+                                                        [self.batch_size, self.max_num_lat_words, self.lat_word_dim]),
                                     axis=-2)
             # context2 = tf.matmul(tf.reshape(tf.diag(out_norm),[-1,self.max_num_words]),tf.transpose(values,[-1,self.max_num_words]))
             # is this the same
@@ -139,6 +141,8 @@ class Decoder:
                 prediction = tf.layers.dense(inputs=cell_output, activation=None, units=self.dict_length)
                 next_loop_state = loop_state.write(time - 1, prediction)
                 next_input = tf.concat([prediction, _inputs_ta.read(time)], axis=-1)
+            # argmax seems to be working a bit better, funny as it's not differentiable
+            # next_input = tf.concat([tf.one_hot(tf.argmax(prediction, -1), depth=self.dict_length, axis=-1), _inputs_ta.read(time)],axis=-1)
             elements_finished = (time >= sequence_length - 1)
 
             return (elements_finished, next_input, next_cell_state, emit_output, next_loop_state)
@@ -161,7 +165,7 @@ class Decoder:
         return out, global_latent, global_logsig, global_mu
 
     def prior(self, values, num_units, global_latent, word_lens, reuse):
-        global_latent = tf.transpose(tf.stack([global_latent for _ in range(self.max_num_words)]), [1, 0, 2])
+        global_latent = tf.transpose(tf.stack([global_latent for _ in range(self.max_num_lat_words)]), [1, 0, 2])
         print(' PRIOR input dim from post {}'.format(values))
         values = tf.concat([tf.zeros(shape=[self.batch_size, 1, self.lat_word_dim], dtype=tf.float32), values], axis=1)
         values = values[:, 0:-1, :]
@@ -175,27 +179,17 @@ class Decoder:
                                 dtype=tf.float32)
             b = tf.get_variable(name='prior_dense_b', shape=self.lat_word_dim * 2, dtype=tf.float32)
             out = tf.reshape(tf.matmul(tf.reshape(values, [-1, self.lat_word_dim]), w) + b,
-                             [self.batch_size, self.max_num_words, self.lat_word_dim * 2])
+                             [self.batch_size, self.max_num_lat_words, self.lat_word_dim * 2])
 
             mu, log_sig = tf.split(out, axis=-1, num_or_size_splits=2, name='prior_dense')
             print('MU{}'.format(mu))
         return [mu, log_sig]
 
-    def cost_function(self, predictions, true_input, global_mu, global_logsig, posterior_mu, posterior_logsig, shift,
-                      total_steps, global_step, kl=True):
+    def cost_function(self,mask_kl, predictions, true_input, global_mu, global_logsig,posterior_mu, posterior_logsig, shift, total_steps, global_step, kl=True):
         mask = tf.reduce_sum(true_input, -1)
         # reconstruction = tf.reduce_sum(tf.reduce_sum(-true_input*tf.log(predictions+1e-9),axis=-1),-1)
-        reconstruction = tf.reduce_sum(
-            tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(true_input, -1), logits=predictions) * mask,
-            -1)
-        # have to be very careful of order of the mean/stddev parmeters
-        # outer reduce sum for each KL term
-        '''
-        kl_p1 = 0.5 * (tf.reduce_sum(tf.exp(posterior_logsig - prior_logsig), axis=-1) + tf.reduce_sum(
-            (posterior_mu - prior_mu) * tf.divide(1, tf.exp(prior_logsig)) * (posterior_mu - prior_mu),
-            axis=-1) - tf.cast(tf.shape(posterior_mu)[-1], dtype=tf.float32) + tf.reduce_sum(
-            (prior_logsig - posterior_logsig), axis=-1))
-        '''
+        reconstruction = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(true_input, -1), logits=predictions) * mask
+        reconstruction = tf.reduce_sum(reconstruction,-1)
 
         prior_mu = tf.zeros([self.batch_size, self.max_num_words, self.lat_word_dim], dtype=tf.float32)
         prior_logsig = tf.ones([self.batch_size, self.max_num_words, self.lat_word_dim], dtype=tf.float32)
@@ -207,26 +201,13 @@ class Decoder:
                     (posterior_mu * posterior_mu), axis=-1))
 
         kl_p2 = tf.reduce_sum(kl_p1, -1)
-        '''
-        kl_p1 = 0.5 * (tf.reduce_sum(tf.reduce_sum(tf.log(tf.square(tf.exp(prior_logsig))),axis=1) - tf.reduce_sum(tf.log(tf.square(tf.exp(posterior_logsig))),axis=1),axis=-1) - 
-            tf.cast(tf.shape(posterior_mu)[-1], dtype=tf.float32) * tf.cast(tf.shape(prior_mu)[1],dtype=tf.float32) + 
-            tf.reduce_sum(tf.reduce_sum(tf.divide(1,tf.square(tf.exp(prior_logsig))) * tf.square(tf.exp(posterior_logsig)),axis=-1) +  tf.reduce_sum(
-            (posterior_mu - prior_mu) * tf.divide(1, tf.square(tf.exp(prior_logsig))) * (posterior_mu - prior_mu),
-            axis=-1),axis=-1))
-        '''
-        '''
-        kl_global_lat = 0.5 * (
-        tf.reduce_sum(tf.exp(global_logsig), axis=-1) + tf.reduce_sum((global_mu * global_mu), axis=-1) - tf.cast(
-            tf.shape(global_mu)[-1], dtype=tf.float32) - tf.reduce_sum(global_logsig))
-        '''
 
         kl_global_lat = 0.5 * (
                     -tf.reduce_sum(tf.log(tf.square(tf.exp(global_logsig))), axis=-1) - tf.cast(tf.shape(global_mu)[-1],
                                                                                                 dtype=tf.float32) + tf.reduce_sum(
                 tf.square(tf.exp(global_logsig)), axis=-1) + tf.reduce_sum((global_mu * global_mu), axis=-1))
 
-        # kl_p2 = kl_p1
-
+        
         if kl:
             kl_p3 = kl_p2 + kl_global_lat
             anneal_c = tf.cast(tf.minimum(tf.maximum(tf.divide((global_step - shift), total_steps), 0), 1),
@@ -240,18 +221,12 @@ class Decoder:
         cost = tf.reduce_mean(kl_p3 + reconstruction)
         return cost, reconstruction, kl_p3, kl_p1, kl_global_lat, kl_p2, anneal_c
 
-    def test_cost_function(self, predictions, true_input, global_mu, global_logsig, posterior_mu, posterior_logsig):
+    def test_cost_function(self, predictions, mask_kl, true_input, global_mu, global_logsig,posterior_mu, posterior_logsig):
         mask = tf.reduce_sum(true_input, -1)
         reconstruction = tf.reduce_sum(
             tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(true_input, -1), logits=predictions) * mask,
             -1)
-        # reconstruction = tf.reduce_sum(-true_input*tf.log(predictions+1e-9),axis=-1)
-        # have to be very careful of order of the mean/stddev parmeters
-        # outer reduce sum for each KL term
-        #        kl_p1 = 0.5*(tf.reduce_sum(tf.exp(posterior_logsig-prior_logsig),axis=-1)+tf.reduce_sum((posterior_mu-prior_mu)*tf.divide(1,tf.exp(prior_logsig))*(posterior_mu-prior_mu),axis=-1)-tf.cast(tf.shape(posterior_mu)[-1],dtype=tf.float32)+tf.reduce_sum((prior_logsig-posterior_logsig),axis=-1))
-        #        kl_global_lat = 0.5*(tf.reduce_sum(tf.exp(global_logsig),axis=-1)+ tf.reduce_sum((global_mu*global_mu),axis=-1)-tf.cast(tf.shape(global_mu)[-1],dtype=tf.float32)-tf.reduce_sum(global_logsig))
-        # sum over all seperate KLs for each lat var
-
+        
         prior_mu = tf.zeros([self.batch_size, self.max_num_words, self.lat_word_dim], dtype=tf.float32)
         prior_logsig = tf.ones([self.batch_size, self.max_num_words, self.lat_word_dim], dtype=tf.float32)
 
@@ -263,27 +238,19 @@ class Decoder:
 
         kl_p2 = tf.reduce_sum(kl_p1, -1)
 
-        '''
-        kl_p1 = 0.5 * (tf.reduce_sum(tf.reduce_sum(tf.log(tf.square(tf.exp(prior_logsig))),axis=1) - tf.reduce_sum(tf.log(tf.square(tf.exp(posterior_logsig))),axis=1),axis=-1) -
-            tf.cast(tf.shape(posterior_mu)[-1], dtype=tf.float32) * tf.cast(tf.shape(prior_mu)[1],dtype=tf.float32) +
-            tf.reduce_sum(tf.reduce_sum(tf.divide(1,tf.square(tf.exp(prior_logsig))) * tf.square(tf.exp(posterior_logsig)),axis=-1) +  tf.reduce_sum(
-            (posterior_mu - prior_mu) * tf.divide(1, tf.square(tf.exp(prior_logsig))) * (posterior_mu - prior_mu),
-            axis=-1),axis=-1))
-        '''
-
         kl_global_lat = 0.5 * (
                     -tf.reduce_sum(tf.log(tf.square(tf.exp(global_logsig))), axis=-1) - tf.cast(tf.shape(global_mu)[-1],
                                                                                                 dtype=tf.float32) + tf.reduce_sum(
                 tf.square(tf.exp(global_logsig)), axis=-1) + tf.reduce_sum((global_mu * global_mu), axis=-1))
 
         kl_p3 = kl_p2 + kl_global_lat
-        cost = tf.reduce_mean(kl_p3 + tf.reduce_sum(reconstruction, -1))
+        cost = tf.reduce_mean(kl_p3 + reconstruction)
         return cost, reconstruction, kl_p3, kl_p1
 
-    def calc_cost(self, kl, posterior_logsig, post_samples, global_mu, global_logsig, global_latent_sample,
+    def calc_cost(self,mask_kl, kl, posterior_logsig, post_samples, global_mu, global_logsig, global_latent_sample,
                   posterior_mu, true_input, sentence_word_lens, predictions, shift, total_steps, global_step, reuse):
-        # prior_mu,prior_logsig = self.prior(values=post_samples,num_units=self.units_encoder_lstm,global_latent=global_latent_sample,word_lens=sentence_word_lens,reuse=reuse)
-        cost, reconstruction, kl_p3, kl_p1, kl_global, kl_p2, anneal_c = self.cost_function(kl=kl,
+        #prior_mu, prior_logsig = self.prior(values=post_samples, num_units=self.units_encoder_lstm,global_latent=global_latent_sample, word_lens=sentence_word_lens,reuse=reuse)
+        cost, reconstruction, kl_p3, kl_p1, kl_global, kl_p2, anneal_c = self.cost_function(mask_kl=mask_kl, kl=kl,
                                                                                             predictions=predictions,
                                                                                             true_input=true_input,
                                                                                             global_mu=global_mu,
@@ -293,7 +260,9 @@ class Decoder:
                                                                                             shift=shift,
                                                                                             total_steps=total_steps,
                                                                                             global_step=global_step)
-        self.kls_hist = tf.summary.histogram('kls', tf.reduce_mean(kl_p1, 0))
+        kl_hist = tf.cond(tf.cast(global_step, dtype=tf.float32) > shift * 1.5, lambda: tf.reduce_mean(kl_p1),
+                          lambda: tf.zeros(shape=tf.shape(tf.reduce_mean(kl_p1)), dtype=tf.float32))
+        self.kls_hist = tf.summary.histogram('kls', tf.reduce_mean(kl_hist))
         self.global_kl_scalar = tf.summary.scalar('kls_global', tf.reduce_mean(kl_global))
         self.rec_scalar = tf.summary.scalar('rec', tf.reduce_mean(reconstruction))
         self.cost_scalar = tf.summary.scalar('full_cost', cost)
@@ -302,31 +271,72 @@ class Decoder:
         kl = tf.reduce_mean(kl_p3)
 
         self.full_kl_scalar = tf.summary.scalar('full_kl', kl)
+        var_all = tf.cond(tf.cast(global_step, dtype=tf.float32) > shift * 1.5, lambda: var_all,
+                          lambda: tf.zeros(shape=tf.shape(var_all), dtype=tf.float32))
         self.sum_all_activ_hist = tf.summary.histogram('active_lats_all', var_all)
         var_g = tf.nn.moments(x=global_mu, axes=0)
         var_g = var_g[-1]
+        var_g = tf.cond(tf.cast(global_step, dtype=tf.float32) > shift * 1.5, lambda: var_g,
+                        lambda: tf.zeros(shape=tf.shape(var_g), dtype=tf.float32))
+
         self.sum_global_activ_hist = tf.summary.histogram('active_lats_global', var_g)
 
         return cost, reconstruction, kl_p3, kl_p1, kl_global, kl_p2, anneal_c
-
-    def test_calc_cost(self, posterior_logsig, post_samples, global_mu, global_logsig, global_latent_sample,
+        
+    def test_calc_cost(self, mask_kl, posterior_logsig, post_samples, global_mu, global_logsig, global_latent_sample,
                        posterior_mu, true_input, predictions, sentence_word_lens):
-        # prior_mu,prior_logsig = self.prior(values=post_samples,num_units=self.units_encoder_lstm,global_latent=global_latent_sample,word_lens=sentence_word_lens,reuse=True)
-        cost, _, _, _ = self.test_cost_function(predictions=predictions, true_input=true_input, global_mu=global_mu,
-                                                global_logsig=global_logsig, posterior_mu=posterior_mu,
-                                                posterior_logsig=posterior_logsig)
+        #prior_mu, prior_logsig = self.prior(values=post_samples, num_units=self.units_encoder_lstm,
+        #                                   global_latent=global_latent_sample, word_lens=sentence_word_lens,
+        #                                   reuse=True)
+        cost, reconstruction, kl_p3, kl_p1 = self.test_cost_function(mask_kl=mask_kl, predictions=predictions,
+                                                                     true_input=true_input, global_mu=global_mu,
+                                                                     global_logsig=global_logsig,
+                                                                     posterior_mu=posterior_mu,
+                                                                     posterior_logsig=posterior_logsig)
+        self.sum_rec_val = tf.summary.scalar('rec_test', tf.reduce_mean(reconstruction))
+        self.sum_kl_val = tf.summary.scalar('kl_test', tf.reduce_mean(kl_p3))
         return cost
 
     def generation(self, samples, latent_words):
-
-        context = self.decoder_p2(num_hidden_word_units=self.lat_word_dim, inputs=loop_state_out,
+        context = self.decoder_p2(num_hidden_word_units=self.lat_word_dim, inputs=latent_words,
                                   sequence_length=np.repeat(self.num_sentence_characters, self.batch_size, axis=-1),
                                   global_latent=samples, reuse=True, context_dim=self.decoder_units,
                                   max_time=self.num_sentence_characters)
         predictions = self.decoder_p3(inputs=context, reuse=True,
                                       sequence_length=np.repeat(self.num_sentence_characters, self.batch_size, axis=-1),
                                       max_time=self.num_sentence_characters)
+        
         return predictions
+
+    def vanilla_decoder(self, inputs, reuse):
+
+        outputs_ta = tf.TensorArray(dtype=tf.float32, size=max_time, name='pred_char_array')
+
+        cell = tf.contrib.rnn.LSTMCell(self.decoder_p3_units)
+
+        def loop_fn(time, cell_output, cell_state, loop_state):
+            next_loop_state = loop_state
+            emit_output = cell_output  # == None for time == 0
+            if cell_output is None:  # time == 0
+                next_cell_state = cell.zero_state(self.batch_size, tf.float32)
+                next_input = tf.concat(
+                    [tf.zeros(shape=[self.batch_size, self.dict_length + self.lat_word_dim], dtype=tf.float32)],
+                    axis=-1)
+                next_loop_state = outputs_ta
+            else:
+
+                next_cell_state = cell_state
+                prediction = tf.layers.dense(inputs=cell_output, activation=None, units=self.dict_length)
+                next_loop_state = loop_state.write(time - 1, prediction)
+                next_input = tf.concat([prediction, inputs], axis=-1)
+            elements_finished = (time >= sequence_length - 1)
+
+            return (elements_finished, next_input, next_cell_state, emit_output, next_loop_state)
+
+        with tf.variable_scope('vanilla_decoder', reuse=reuse):
+            _, _, loop_ta = tf.nn.raw_rnn(cell, loop_fn)
+            output = _transpose_batch_time(loop_ta.stack())
+        return output
 
 # Example usage
 # batch_len = np.random.randint(low=0,high=30,size=[10])

@@ -231,7 +231,7 @@ class Encoder:
                 z_mean = tf.multiply(z_mean, word_slice)
                 z_log_sigma_sq = tf.multiply(z_log_sigma_sq, word_slice)
 
-                next_cell_state = cell_state
+                next_cell_state = cell_state 
                 sample_loop_state = loop_state[0].write(time - 1, z_sample)
                 mean_loop_state = loop_state[1].write(time - 1, z_mean)
                 sigma_loop_state = loop_state[2].write(time - 1, z_log_sigma_sq)
