@@ -234,7 +234,7 @@ class Decoder:
                                dtype=tf.float32)
             kl_p3 = kl_p3 * anneal_c
         else:
-            anneal_c = 0
+            anneal_c = tf.constant(0,dtype=tf.float32)
             kl_p3 = tf.constant(0, dtype=tf.float32)
         # sum over all seperate KLs for each lat var
 
