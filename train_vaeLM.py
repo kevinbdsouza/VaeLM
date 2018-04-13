@@ -150,7 +150,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     total_steps = np.round(np.true_divide(n_epochs,16)*np.shape(onehot_words)[0],decimals=0)
 
     ####
-    cost,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal,_ = decoder.calc_cost(mask_kl=mask_kl_pl,kl=True,sentence_word_lens=sent_word_len_list_pl,shift=shift,total_steps=total_steps,global_step=global_step,global_latent_sample=global_latent_o,global_logsig=global_logsig_o,global_mu=global_mu_o,predictions=out_o,true_input=onehot_words_pl,posterior_logsig=logsig_state_out_p,posterior_mu=mean_state_out_p,post_samples=word_state_out_p,reuse=None)
+    cost,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal,_ = decoder.calc_cost(eow_mask=None,mask_kl=mask_kl_pl,kl=True,sentence_word_lens=sent_word_len_list_pl,shift=shift,total_steps=total_steps,global_step=global_step,global_latent_sample=global_latent_o,global_logsig=global_logsig_o,global_mu=global_mu_o,predictions=out_o,true_input=onehot_words_pl,posterior_logsig=logsig_state_out_p,posterior_mu=mean_state_out_p,post_samples=word_state_out_p,reuse=None)
 
     ######
     # Train Step
@@ -195,7 +195,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     logsig_state_out_p_val = permute_encoder_output(encoder_out=logsig_state_out_val, perm_mat=perm_mat_pl_val, batch_size=batch_size_val, max_word_len=max_lat_word_len)
     out_o_val, global_latent_o_val,global_logsig_o_val,global_mu_o_val = decoder.run_decoder(word_sequence_length=sent_word_len_list_pl_val,train=False,reuse=True,units_lstm_decoder=decoder_dim,lat_words=word_state_out_p_val,units_dense_global=decoder.global_lat_dim,char_sequence_length=tf.cast(sent_char_len_list_pl_val,dtype=tf.int32))
     #test cost
-    test_cost = decoder.test_calc_cost(mask_kl=mask_kl_pl,sentence_word_lens=sent_word_len_list_pl_val,posterior_logsig=logsig_state_out_p_val,post_samples=word_state_out_p_val,global_mu=global_mu_o_val,global_logsig=global_logsig_o_val,global_latent_sample=global_latent_o_val,posterior_mu=mean_state_out_p_val,true_input=onehot_words_pl_val,predictions=out_o_val)
+    test_cost = decoder.test_calc_cost(eow_mask=None,mask_kl=mask_kl_pl,sentence_word_lens=sent_word_len_list_pl_val,posterior_logsig=logsig_state_out_p_val,post_samples=word_state_out_p_val,global_mu=global_mu_o_val,global_logsig=global_logsig_o_val,global_latent_sample=global_latent_o_val,posterior_mu=mean_state_out_p_val,true_input=onehot_words_pl_val,predictions=out_o_val)
 
     ######
 
