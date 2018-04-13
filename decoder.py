@@ -18,10 +18,12 @@ class Decoder:
         self.global_lat_dim = kwargs['global_lat_dim']
         self.decoder_p3_units = kwargs['decoder_p3_units']
 
-    def make_global_latent(self, values, units_dense):
+    def make_global_latent(self, values, reuse,units_dense):
         mean_pool = tf.reduce_mean(values, axis=-1)
-        pre_dist1 = tf.layers.dense(inputs=mean_pool, activation=tf.nn.relu, units=units_dense)
-        pre_dist2 = tf.layers.dense(inputs=pre_dist1, activation=None, units=units_dense * 2)
+
+        with tf.variable_scope('global_lat_var_scope',reuse=reuse):
+            pre_dist1 = tf.layers.dense(inputs=mean_pool, activation=tf.nn.relu, units=units_dense,name='layer1_global_lat')
+            pre_dist2 = tf.layers.dense(inputs=pre_dist1, activation=None, units=units_dense * 2,name='layer2_global_lat')
         mu, log_sig = tf.split(tf.cast(pre_dist2, dtype=tf.float32), axis=-1, num_or_size_splits=2)
         mu = mu * 10
         log_sig = log_sig - 3
