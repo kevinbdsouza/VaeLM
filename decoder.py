@@ -376,7 +376,7 @@ class Decoder:
             _, _, loop_state_ta = tf.nn.raw_rnn(cell, loop_fn)
             loop_state_out = _transpose_batch_time(loop_state_ta.stack())
         context = self.decoder_p2(num_hidden_word_units=self.lat_word_dim, inputs=loop_state_out,
-                                  word_sequence_length=np.repeat(self.num_sentence_characters, self.batch_size, axis=-1),
+                                  word_sequence_length=np.repeat(self.max_num_lat_words, self.batch_size, axis=-1),
                                   global_latent=samples, reuse=True, context_dim=self.decoder_units,
                                   max_time=self.num_sentence_characters)
         predictions = self.decoder_p3(inputs=context, reuse=True,
