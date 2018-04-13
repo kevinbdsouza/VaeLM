@@ -195,8 +195,7 @@ class Decoder:
         prior_logsig = tf.ones([self.batch_size, self.max_num_words, self.lat_word_dim], dtype=tf.float32)
 
         kl_p1 = 0.5 * (-tf.reduce_sum(tf.log(tf.square(tf.exp(posterior_logsig))), axis=-1) -
-                       tf.cast(tf.shape(posterior_mu)[-1], dtype=tf.float32) * tf.cast(tf.shape(prior_mu)[1],
-                                                                                       dtype=tf.float32) +
+                       tf.cast(tf.shape(posterior_mu)[-1], dtype=tf.float32) +
                        tf.reduce_sum(tf.square(tf.exp(posterior_logsig)), axis=-1) + tf.reduce_sum(
                     (posterior_mu * posterior_mu), axis=-1))
 
@@ -231,8 +230,7 @@ class Decoder:
         prior_logsig = tf.ones([self.batch_size, self.max_num_words, self.lat_word_dim], dtype=tf.float32)
 
         kl_p1 = 0.5 * (-tf.reduce_sum(tf.log(tf.square(tf.exp(posterior_logsig))), axis=-1) -
-                       tf.cast(tf.shape(posterior_mu)[-1], dtype=tf.float32) * tf.cast(tf.shape(prior_mu)[1],
-                                                                                       dtype=tf.float32) +
+                       tf.cast(tf.shape(posterior_mu)[-1], dtype=tf.float32) +
                        tf.reduce_sum(tf.square(tf.exp(posterior_logsig)), axis=-1) + tf.reduce_sum(
                     (posterior_mu * posterior_mu), axis=-1))
 
