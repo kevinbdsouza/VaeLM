@@ -84,7 +84,7 @@ class Decoder:
             # l1 = tf.reshape(l1,[self.batch_size,self.lat_word_dim+self.decoder_units])
         return l1
 
-    def decoder_p2(self, num_hidden_word_units, inputs, sequence_length, global_latent, reuse, context_dim, max_time):
+    def decoder_p2(self, num_hidden_word_units, inputs, word_sequence_length, global_latent, reuse, context_dim, max_time):
         outputs_ta = tf.TensorArray(dtype=tf.float32, size=max_time)
 
         cell = tf.contrib.rnn.LSTMCell(self.decoder_units)
@@ -110,7 +110,7 @@ class Decoder:
                 # took context out of decoder loop because softmax may be saturating
                 next_input = tf.concat([context, global_latent], axis=-1)
                 next_loop_state = loop_state.write(time - 1, context)
-            elements_finished = (time >= sequence_length)
+            elements_finished = (time >= word_sequence_length)
 
             return (elements_finished, next_input, next_cell_state, emit_output, next_loop_state)
 
@@ -120,7 +120,7 @@ class Decoder:
 
         return loop_state_ta
 
-    def decoder_p3(self, inputs, reuse, max_time, sequence_length):
+    def decoder_p3(self, inputs, reuse, max_time, char_sequence_length):
         #        _inputs_ta = tf.TensorArray(dtype=tf.float32, size=max_time,name='context_array')
         #	_inputs_ta = _inputs_ta.unstack(tf.transpose(inputs,[1,0,2]))
         _inputs_ta = inputs
@@ -145,7 +145,7 @@ class Decoder:
                 next_input = tf.concat([prediction, _inputs_ta.read(time)], axis=-1)
             # argmax seems to be working a bit better, funny as it's not differentiable
             # next_input = tf.concat([tf.one_hot(tf.argmax(prediction, -1), depth=self.dict_length, axis=-1), _inputs_ta.read(time)],axis=-1)
-            elements_finished = (time >= sequence_length - 1)
+            elements_finished = (time >= char_sequence_length - 1)
 
             return (elements_finished, next_input, next_cell_state, emit_output, next_loop_state)
 
@@ -154,16 +154,16 @@ class Decoder:
             output = _transpose_batch_time(loop_ta.stack())
         return output
 
-    def run_decoder(self, units_lstm_decoder, sequence_length, units_dense_global, lat_words, reuse):
+    def run_decoder(self, units_lstm_decoder,word_sequence_length, char_sequence_length, units_dense_global, lat_words, reuse):
         if self.simple_decoder:
             global_mu, global_logsig = self.make_global_latent(values=lat_words, units_dense=units_dense_global)
             eps = tf.random_normal(shape=[self.batch_size, units_dense_global], dtype=tf.float32)
             global_latent = eps * tf.exp(global_logsig) + global_mu
-            out_2 = self.decoder_p2(sequence_length=sequence_length, num_hidden_word_units=units_lstm_decoder,
+            out_2 = self.decoder_p2(word_sequence_length=word_sequence_length, num_hidden_word_units=units_lstm_decoder,
                                     inputs=lat_words, reuse=reuse, global_latent=global_latent,
                                     context_dim=units_lstm_decoder, max_time=self.num_sentence_characters)
             out = self.decoder_p3(inputs=out_2, reuse=reuse, max_time=self.num_sentence_characters,
-                                  sequence_length=sequence_length)
+                                  char_sequence_length=char_sequence_length)
         return out, global_latent, global_logsig, global_mu
 
     def prior(self, values, num_units, global_latent, word_lens, reuse):
@@ -234,7 +234,7 @@ class Decoder:
             kl_p3 = kl_p2 + kl_global_lat
             anneal_c = tf.cast(tf.minimum(tf.maximum(tf.divide((global_step - shift), total_steps), 0), 1),
                                dtype=tf.float32)
-            kl_p3 = kl_p3 * anneal_c
+            kl_p3 = kl_p3* anneal_c
         else:
             anneal_c = tf.constant(0,dtype=tf.float32)
             kl_p3 = tf.constant(0, dtype=tf.float32)
@@ -373,11 +373,11 @@ class Decoder:
             _, _, loop_state_ta = tf.nn.raw_rnn(cell, loop_fn)
             loop_state_out = _transpose_batch_time(loop_state_ta.stack())
         context = self.decoder_p2(num_hidden_word_units=self.lat_word_dim, inputs=loop_state_out,
-                                  sequence_length=np.repeat(self.num_sentence_characters, self.batch_size, axis=-1),
+                                  word_sequence_length=np.repeat(self.num_sentence_characters, self.batch_size, axis=-1),
                                   global_latent=samples, reuse=True, context_dim=self.decoder_units,
                                   max_time=self.num_sentence_characters)
         predictions = self.decoder_p3(inputs=context, reuse=True,
-                                      sequence_length=np.repeat(self.num_sentence_characters, self.batch_size, axis=-1),
+                                      char_sequence_length=np.repeat(self.num_sentence_characters, self.batch_size, axis=-1),
                                       max_time=self.num_sentence_characters)
         return predictions
 

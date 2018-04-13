@@ -97,7 +97,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     global_step = tf.Variable(0, name='global_step', trainable=False)
 
 
-    word_state_out, mean_state_out, logsig_state_out = encoder_k.run_encoder(train=True,inputs=onehot_words_pl, word_pos=word_pos_pl,reuse=None)
+    word_state_out, mean_state_out, logsig_state_out = encoder_k.run_encoder(sentence_lens=sent_char_len_list_pl,train=True,inputs=onehot_words_pl, word_pos=word_pos_pl,reuse=None)
 
     #picking out our words
     #why do these all start at 0?
@@ -113,7 +113,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     #Initialize decoder
     ##Note to self: need to input sentence lengths vector, also check to make sure all the placeholders flow into my class and tensorflow with ease
 
-    out_o, global_latent_o,global_logsig_o,global_mu_o = decoder.run_decoder(train=True,reuse=None,units_lstm_decoder=decoder_dim,lat_words=word_state_out_p,units_dense_global=decoder_dim,sequence_length=tf.cast(sent_char_len_list_pl,dtype=tf.int32))
+    out_o, global_latent_o,global_logsig_o,global_mu_o = decoder.run_decoder(word_sequence_length=sent_word_len_list_pl,train=True,reuse=None,units_lstm_decoder=decoder_dim,lat_words=word_state_out_p,units_dense_global=decoder_dim,char_sequence_length=tf.cast(sent_char_len_list_pl,dtype=tf.int32))
 
     # shaping for batching
     #reshape problem
@@ -176,7 +176,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     sent_char_len_list_pl_val= tf.placeholder(name='sent_char_len_list_val',dtype=tf.float32,shape=[batch_size])
 
     #testing graph
-    word_state_out_val, mean_state_out_val, logsig_state_out_val = encoder_k.run_encoder(train=False,inputs=onehot_words_pl_val, word_pos=word_pos_pl_val,reuse=True)
+    word_state_out_val, mean_state_out_val, logsig_state_out_val = encoder_k.run_encoder(sentence_lens=sent_char_len_list_pl_val,train=False,inputs=onehot_words_pl_val, word_pos=word_pos_pl_val,reuse=True)
     perm_mat_val,_,lat_sent_len_list_val = prep_perm_matrix(batch_size=batch_size_val,word_pos_matrix=word_pos_val,max_char_len=max_char_len,max_word_len=max_lat_word_len)
     kl_mask_val = []
     for word_len in np.reshape(lat_sent_len_list_val,-1):
@@ -193,7 +193,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     word_state_out_p_val = permute_encoder_output(encoder_out=word_state_out_val, perm_mat=perm_mat_pl_val, batch_size=batch_size_val, max_word_len=max_lat_word_len)
     mean_state_out_p_val = permute_encoder_output(encoder_out=mean_state_out_val, perm_mat=perm_mat_pl_val, batch_size=batch_size_val, max_word_len=max_lat_word_len)
     logsig_state_out_p_val = permute_encoder_output(encoder_out=logsig_state_out_val, perm_mat=perm_mat_pl_val, batch_size=batch_size_val, max_word_len=max_lat_word_len)
-    out_o_val, global_latent_o_val,global_logsig_o_val,global_mu_o_val = decoder.run_decoder(train=False,reuse=True,units_lstm_decoder=decoder_dim,lat_words=word_state_out_p_val,units_dense_global=decoder.global_lat_dim,sequence_length=tf.cast(sent_char_len_list_pl_val,dtype=tf.int32))
+    out_o_val, global_latent_o_val,global_logsig_o_val,global_mu_o_val = decoder.run_decoder(word_sequence_length=sent_word_len_list_pl_val,train=False,reuse=True,units_lstm_decoder=decoder_dim,lat_words=word_state_out_p_val,units_dense_global=decoder.global_lat_dim,char_sequence_length=tf.cast(sent_char_len_list_pl_val,dtype=tf.int32))
     #test cost
     test_cost = decoder.test_calc_cost(mask_kl=mask_kl_pl,sentence_word_lens=sent_word_len_list_pl_val,posterior_logsig=logsig_state_out_p_val,post_samples=word_state_out_p_val,global_mu=global_mu_o_val,global_logsig=global_logsig_o_val,global_latent_sample=global_latent_o_val,posterior_mu=mean_state_out_p_val,true_input=onehot_words_pl_val,predictions=out_o_val)
 
@@ -240,7 +240,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
 		val_predictions = np.argmax(val_predictions_o_np,axis=-1)
 		true= np.argmax(onehot_words_val[rind],-1)
 		num =np.sum([np.sum(val_predictions[j][0:i] == true[j][0:i]) for j,i in enumerate(sentence_lens_nchars_val[rind])])
-		
+
 		denom = np.sum(sentence_lens_nchars_val[rind])
 		accuracy = np.true_divide(num,denom)*100
 		logger.debug('accuracy on random val batch {}'.format(accuracy))
@@ -255,7 +255,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
             if global_step_o_np % 1000==0:
                 # testing on the generative model
                 gen_o_np = sess.run([gen_samples])
-	        gen_pred = np.argmax(gen_o_np[0:10],axis=-1)	
+	        gen_pred = np.argmax(gen_o_np[0:10],axis=-1)
 		logger.debug('GEN predictions {}'.format([[index2token[j] for j in i] for i in gen_pred[0][0:10,0:50]]))
 
             summary_writer.add_summary(summary_inf_train_o, global_step_o_np)
