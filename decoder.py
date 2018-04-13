@@ -57,34 +57,21 @@ class Decoder:
             w1 = tf.get_variable(name='query_w', shape=[self.decoder_units, self.lat_word_dim])
             w2 = tf.get_variable(name='value_w', shape=[self.lat_word_dim, self.lat_word_dim])
             v = tf.get_variable(name='v', shape=[self.lat_word_dim])
-            print('here')
             conv_q = tf.reshape(tf.einsum('ij,jk->ik', queries, w1), [-1, 1, self.lat_word_dim])
-            print('here1')
-            a_p1 = tf.reshape(tf.tile(conv_q, [1, 1, self.max_num_lat_words]),
-                              [self.batch_size, self.max_num_lat_words, self.lat_word_dim])
-            print('here2')
-            print(w2)
-            print('a p1 {}'.format(a_p1))
+            a_p1 = tf.reshape(tf.tile(conv_q, [1, 1, self.max_num_lat_words]),[self.batch_size, self.max_num_lat_words, self.lat_word_dim])
+
 
             a_p2 = tf.einsum('ijk,kl->ijl', values, w2)
-            print('a p2 {}'.format(a_p2))
-            print('here3')
+
             out = tf.einsum('k,ijk->ij', v, tf.nn.tanh(name='combine', x=a_p1 + a_p2))
-            print('MAT for softmax {}'.format(out))
             out_norm = tf.nn.softmax(out, dim=-1)
-            context = tf.reduce_sum(values * tf.reshape(tf.stack([out_norm for _ in range(self.lat_word_dim)], -1),
-                                                        [self.batch_size, self.max_num_lat_words, self.lat_word_dim]),
-                                    axis=-2)
-            # context2 = tf.matmul(tf.reshape(tf.diag(out_norm),[-1,self.max_num_words]),tf.transpose(values,[-1,self.max_num_words]))
-            # is this the same
-            # print('ALT CONTEXT {}'.format(context2))
-            print('CONTEX SHAPE {}'.format(context))
-            # l1 = tf.concat([context,queries],axis=-1)
+            context = tf.reduce_sum(values * tf.reshape(tf.stack([out_norm for _ in range(self.lat_word_dim)], -1),[self.batch_size, self.max_num_lat_words, self.lat_word_dim]),axis=-2)
+
             l1 = tf.reshape(context, [self.batch_size, self.lat_word_dim])
             # l1 = tf.reshape(l1,[self.batch_size,self.lat_word_dim+self.decoder_units])
         return l1
 
-    def decoder_p2(self, num_hidden_word_units, inputs, word_sequence_length, global_latent, reuse, context_dim, max_time):
+    def decoder_p2(self, num_hidden_word_units, inputs, char_sequence_length, global_latent, reuse, context_dim, max_time):
         outputs_ta = tf.TensorArray(dtype=tf.float32, size=max_time)
 
         cell = tf.contrib.rnn.LSTMCell(self.decoder_units)
@@ -98,8 +85,7 @@ class Decoder:
                     queries=tf.zeros(shape=[self.batch_size, num_hidden_word_units], dtype=tf.float32), values=inputs,
                     reuse=None)
                 # next_input = tf.concat([tf.zeros(shape=[self.batch_size,self.lat_word_dim],dtype=tf.float32),tf.zeros(shape=[self.batch_size,self.global_lat_dim],dtype=tf.float32)],axis=-1)
-                next_input = tf.zeros(shape=[self.batch_size, self.lat_word_dim + self.global_lat_dim],
-                                      dtype=tf.float32)
+                next_input = tf.zeros(shape=[self.batch_size, self.lat_word_dim + self.global_lat_dim],dtype=tf.float32)
             else:
                 next_cell_state = cell_state
                 context = self.bahd_attention(queries=cell_output, values=inputs, reuse=True)
@@ -110,7 +96,7 @@ class Decoder:
                 # took context out of decoder loop because softmax may be saturating
                 next_input = tf.concat([context, global_latent], axis=-1)
                 next_loop_state = loop_state.write(time - 1, context)
-            elements_finished = (time >= word_sequence_length)
+            elements_finished = (time >= char_sequence_length)
 
             return (elements_finished, next_input, next_cell_state, emit_output, next_loop_state)
 
@@ -162,7 +148,7 @@ class Decoder:
                 global_latent = eps * tf.exp(global_logsig) + global_mu
             else:
                 global_latent=global_mu
-            out_2 = self.decoder_p2(word_sequence_length=word_sequence_length, num_hidden_word_units=units_lstm_decoder,
+            out_2 = self.decoder_p2(char_sequence_length=char_sequence_length, num_hidden_word_units=units_lstm_decoder,
                                     inputs=lat_words, reuse=reuse, global_latent=global_latent,
                                     context_dim=units_lstm_decoder, max_time=self.num_sentence_characters)
             out = self.decoder_p3(inputs=out_2, reuse=reuse, max_time=self.num_sentence_characters,
@@ -376,7 +362,7 @@ class Decoder:
             _, _, loop_state_ta = tf.nn.raw_rnn(cell, loop_fn)
             loop_state_out = _transpose_batch_time(loop_state_ta.stack())
         context = self.decoder_p2(num_hidden_word_units=self.lat_word_dim, inputs=loop_state_out,
-                                  word_sequence_length=np.repeat(self.num_sentence_characters, self.batch_size, axis=-1),
+                                  char_sequence_length=np.repeat(self.num_sentence_characters, self.batch_size, axis=-1),
                                   global_latent=samples, reuse=True, context_dim=self.decoder_units,
                                   max_time=self.num_sentence_characters)
         predictions = self.decoder_p3(inputs=context, reuse=True,
