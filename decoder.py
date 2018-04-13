@@ -156,7 +156,7 @@ class Decoder:
 
     def run_decoder(self, units_lstm_decoder,train,word_sequence_length, char_sequence_length, units_dense_global, lat_words, reuse):
         if self.simple_decoder:
-            global_mu, global_logsig = self.make_global_latent(values=lat_words, units_dense=units_dense_global)
+            global_mu, global_logsig = self.make_global_latent(reuse=reuse,values=lat_words, units_dense=units_dense_global)
             eps = tf.random_normal(shape=[self.batch_size, units_dense_global], dtype=tf.float32)
             if train:
                 global_latent = eps * tf.exp(global_logsig) + global_mu
