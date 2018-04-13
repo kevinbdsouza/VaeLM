@@ -311,7 +311,7 @@ class Decoder:
 
     def test_calc_cost(self, mask_kl, posterior_logsig, post_samples, global_mu, global_logsig, global_latent_sample,
                        posterior_mu, true_input, predictions, sentence_word_lens):
-        prior_mu, prior_logsig = self.prior(values=post_samples, num_units=self.units_encoder_lstm,
+        prior_mu, prior_logsig = self.prior(values=posterior_mu, num_units=self.units_encoder_lstm,
                                             global_latent=global_latent_sample, word_lens=sentence_word_lens,
                                             reuse=True)
         cost, reconstruction, kl_p3, kl_p1 = self.test_cost_function(mask_kl=mask_kl, predictions=predictions,
