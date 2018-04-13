@@ -154,11 +154,14 @@ class Decoder:
             output = _transpose_batch_time(loop_ta.stack())
         return output
 
-    def run_decoder(self, units_lstm_decoder,word_sequence_length, char_sequence_length, units_dense_global, lat_words, reuse):
+    def run_decoder(self, units_lstm_decoder,train,word_sequence_length, char_sequence_length, units_dense_global, lat_words, reuse):
         if self.simple_decoder:
             global_mu, global_logsig = self.make_global_latent(values=lat_words, units_dense=units_dense_global)
             eps = tf.random_normal(shape=[self.batch_size, units_dense_global], dtype=tf.float32)
-            global_latent = eps * tf.exp(global_logsig) + global_mu
+            if train:
+                global_latent = eps * tf.exp(global_logsig) + global_mu
+            else:
+                global_latent=global_mu
             out_2 = self.decoder_p2(word_sequence_length=word_sequence_length, num_hidden_word_units=units_lstm_decoder,
                                     inputs=lat_words, reuse=reuse, global_latent=global_latent,
                                     context_dim=units_lstm_decoder, max_time=self.num_sentence_characters)
