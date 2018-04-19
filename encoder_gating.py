@@ -286,13 +286,13 @@ class Encoder:
                 #try gating 
                 if train:
                     z_sample_gate = tf.sigmoid(z_sample)
-                    z_mean = tf.multiply(z_sample_gate, word_slice)
+                    z_sample_gate = tf.multiply(z_sample_gate, word_slice)
                     next_cell_state = tf.multiply(cell_state[0],z_sample_gate)
                     
                 else:
                     z_mean_gate = tf.sigmoid(z_mean)
                     z_mean_gate = tf.multiply(z_mean_gate, word_slice)
-                    next_cell_state = tf.multiply(cell_state[0],z_mean_gate)
+                    next_cell_state = tf.multiply(cell_state[0  ],z_mean_gate)
                 
                 sample_loop_state = loop_state[0].write(time - 1, next_cell_state)
                 mean_loop_state = loop_state[1].write(time - 1, z_mean)
