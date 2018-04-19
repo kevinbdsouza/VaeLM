@@ -295,6 +295,7 @@ class Encoder:
 
 		        word_slice = tf.logical_not(tf.cast(word_slice, dtype=tf.bool))
 		        word_slice = tf.cast(word_slice, dtype=tf.float32)
+			next_cell_state =tf.contrib.layers.layer_norm(next_cell_state) 
 		        next_cell_state = next_cell_state + tf.multiply(cell_state[0], word_slice)
 		        next_cell_state = tf.contrib.rnn.LSTMStateTuple(next_cell_state, cell_output)
 
