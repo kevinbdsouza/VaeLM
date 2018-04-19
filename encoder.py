@@ -206,12 +206,12 @@ class Encoder:
 	# our [494, 52, 61] tensor becomes [[52, 61], [52, 61], ...]
 	def run_encoder(self, train, inputs, word_pos, sentence_lens, reuse):
 		
-		'''
 		inputs = tf.reshape(inputs, [-1, self.vocabulary_size])
 		print('inputs_1 {}'.format(inputs))
 		with tf.variable_scope('projection1', reuse=reuse):
 		    inputs = tf.layers.dense(inputs=inputs, units=self.input_size, activation=None)
-		'''
+
+        '''
 		inputs = tf.reshape(inputs, [self.batch_size, self.max_char_len, self.input_size])
 		inputs.set_shape([self.batch_size, self.max_char_len, self.input_size])
 		sentence_lens = tf.cast(sentence_lens,dtype=tf.int32)
@@ -234,6 +234,8 @@ class Encoder:
 		    inputs = tf.layers.dense(inputs=inputs, units=self.input_size, activation=None)
 
 		print('inputs_3 {}'.format(inputs))
+
+        '''
 
 		inputs = tf.reshape(inputs, [self.batch_size, self.max_char_len, self.input_size])
 		inputs.set_shape([self.batch_size, self.max_char_len, self.input_size])
