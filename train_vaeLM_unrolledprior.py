@@ -5,6 +5,24 @@ import encoder
 import tensorflow as tf
 import numpy as np
 
+def IW(encoder,decoder,decoder_dim,sent_char_len_list_pl,true_output,onehot_words_pl,word_pos_pl,perm_mat_pl,batch_size,max_lat_word_len,sent_word_len_list_pl):
+    word_state_out, mean_state_out, logsig_state_out = encoder.run_encoder(sentence_lens=sent_char_len_list_pl,
+                                                                             train=True, inputs=onehot_words_pl,
+                                                                             word_pos=word_pos_pl, reuse=True)
+    word_state_out_p = permute_encoder_output(encoder_out=word_state_out, perm_mat=perm_mat_pl, batch_size=batch_size, max_word_len=max_lat_word_len)
+    mean_state_out_p = permute_encoder_output(encoder_out=mean_state_out, perm_mat=perm_mat_pl, batch_size=batch_size, max_word_len=max_lat_word_len)
+    logsig_state_out_p = permute_encoder_output(encoder_out=logsig_state_out, perm_mat=perm_mat_pl, batch_size=batch_size, max_word_len=max_lat_word_len)
+    LL = decoder.IW_loglike(word_lat_samples=word_state_out_p, word_lat_mu=mean_state_out_p, decoder_dim=decoder_dim, word_lat_logsig=logsig_state_out_p, true_output=true_output, char_lens=sent_char_len_list_pl, word_lens=sent_word_len_list_pl)
+    return LL
+
+def n_samples_IW(n_samples,encoder,decoder,decoder_dim,sent_char_len_list_pl,true_output,onehot_words_pl,word_pos_pl,perm_mat_pl,batch_size,max_lat_word_len,sent_word_len_list_pl):
+    ll= [tf.expand_dims(IW(encoder,decoder,decoder_dim,sent_char_len_list_pl,true_output,onehot_words_pl,word_pos_pl,perm_mat_pl,batch_size,max_lat_word_len,sent_word_len_list_pl),-1) for _ in range(n_samples)]
+    bpc = tf.divide(tf.stack(ll,-1),tf.log(2))
+    bpc = -tf.reduce_mean(tf.reduce_mean(bpc,-1),-1)
+    NLL = -tf.reduce_mean(tf.reduce_mean(tf.stack(ll,-1),-1),-1)
+    return NLL, bpc
+
+
 
 
 def prep_perm_matrix(batch_size, word_pos_matrix, max_char_len,max_word_len=None):
@@ -207,10 +225,17 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     sess = tf.InteractiveSession()
     sess.run(tf.global_variables_initializer())
 
+    ### IW eval
+    NLL,bpc = n_samples_IW(n_samples=10, encoder=encoder_k, decoder=decoder, decoder_dim=decoder_dim, sent_char_len_list_pl=sent_char_len_list_pl_val, true_output=onehot_words_pl_val, onehot_words_pl=onehot_words_pl_val,
+                 word_pos_pl=word_pos_pl_val, perm_mat_pl=perm_mat_pl_val, batch_size=batch_size, max_lat_word_len=max_lat_word_len, sent_word_len_list_pl=sent_word_len_list_pl_val)
+    sum_NLL = tf.summary.scalar(tensor=NLL,name='10sample_IWAE_LL')
+    sum_bpc = tf.summary.scalar(tensor=bpc, name='10sample_IWAE_BPC')
+    ###
+
     ######
     #tensorboard stuff
     summary_inf_train = tf.summary.merge([norm_grad,decoder.kls_hist,decoder.global_kl_scalar,decoder.rec_scalar,decoder.cost_scalar,decoder.full_kl_scalar,decoder.sum_all_activ_hist,decoder.sum_global_activ_hist])
-    summary_inf_test = tf.summary.merge([decoder.sum_rec_val,decoder.sum_kl_val])
+    summary_inf_test = tf.summary.merge([sum_NLL,sum_bpc,decoder.sum_rec_val,decoder.sum_kl_val])
     summary_writer = tf.summary.FileWriter(log_dir, sess.graph)
     ######
     log_file = log_dir + "vaelog.txt"
