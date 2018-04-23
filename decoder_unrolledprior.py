@@ -421,11 +421,12 @@ class Decoder:
         return predictions
 
     def IW_loglike(self,word_lat_samples,word_lat_mu,decoder_dim,word_lat_logsig,true_output,char_lens,word_lens):
-        mean_state_out, logsigma_state_out=self.unrolled_prior(values=lat_samples, num_units=self.units_encoder_lstm, global_latent=global_lat_samples, word_lens=word_lens, reuse=True)
-        prior_dist = tf.distributions.Normal(loc = mean_state_out,scale=tf.exp(logsigma_state_out))
         post_dist = tf.distributions.Normal(loc=word_lat_mu,scale=tf.exp(word_lat_logsig))
 
-        out, global_latent, global_logsig, global_mu = self.run_decoder(units_lstm_decoder=decoder_dim,train=,word_sequence_length=None, char_sequence_length=char_lens, units_dense_global, lat_words=word_lat_samples, reuse=True)
+        out, global_latent, global_logsig, global_mu = self.run_decoder(units_lstm_decoder=decoder_dim,train=True,word_sequence_length=None, char_sequence_length=tf.cast(char_lens,dtype=tf.int32), units_dense_global=self.global_lat_dim, lat_words=word_lat_samples, reuse=True)
+        mean_state_out, logsigma_state_out=self.unrolled_prior(values=word_lat_samples, num_units=self.units_encoder_lstm, global_latent=global_latent, word_lens=word_lens, reuse=True)
+        prior_dist = tf.distributions.Normal(loc = mean_state_out,scale=tf.exp(logsigma_state_out))
+
         log_prob_ev = true_output*tf.log(tf.nn.softmax(out))
 
         global_post_dist = tf.distributions.Normal(loc=global_mu,scale=global_logsig)
@@ -435,7 +436,7 @@ class Decoder:
         log_prob_post_global = global_post_dist.log_prob(value=global_latent)
         log_prob_prior_global = global_prior_dist.log_prob(value=global_latent)
 
-        LL = tf.reduce_sum(log_prob_ev,-1)+tf.reduce_sum(log_prob_prior_words-log_prob_post_words,-1)+tf.reduce_sum(log_prob_prior_global-log_prob_post_global,-1)
+        LL = tf.reduce_sum(log_prob_ev,[-2,-1])+tf.reduce_sum(log_prob_prior_words-log_prob_post_words,[-2,-1])+tf.reduce_sum(log_prob_prior_global-log_prob_post_global,[-2,-1])
 
         return LL
 

@@ -17,7 +17,7 @@ def IW(encoder,decoder,decoder_dim,sent_char_len_list_pl,true_output,onehot_word
 
 def n_samples_IW(n_samples,encoder,decoder,decoder_dim,sent_char_len_list_pl,true_output,onehot_words_pl,word_pos_pl,perm_mat_pl,batch_size,max_lat_word_len,sent_word_len_list_pl):
     ll= [tf.expand_dims(IW(encoder,decoder,decoder_dim,sent_char_len_list_pl,true_output,onehot_words_pl,word_pos_pl,perm_mat_pl,batch_size,max_lat_word_len,sent_word_len_list_pl),-1) for _ in range(n_samples)]
-    bpc = tf.divide(tf.stack(ll,-1),tf.log(2))
+    bpc = tf.divide(tf.stack(ll,-1),tf.log(tf.constant(2.0,dtype=tf.float32)))
     bpc = -tf.reduce_mean(tf.reduce_mean(bpc,-1),-1)
     NLL = -tf.reduce_mean(tf.reduce_mean(tf.stack(ll,-1),-1),-1)
     return NLL, bpc
