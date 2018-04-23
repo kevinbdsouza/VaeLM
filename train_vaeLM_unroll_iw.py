@@ -165,7 +165,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
 
     ###KL annealing parameters
     shift = 5000
-    total_steps = np.round(np.true_divide(n_epochs,20)*np.shape(onehot_words)[0],decimals=0)
+    total_steps = np.round(np.true_divide(n_epochs,16)*np.shape(onehot_words)[0],decimals=0)
 
     ####
     cost,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,anneal,_ = decoder.calc_cost(eow_mask=None,mask_kl=mask_kl_pl,kl=True,sentence_word_lens=sent_word_len_list_pl,shift=shift,total_steps=total_steps,global_step=global_step,global_latent_sample=global_latent_o,global_logsig=global_logsig_o,global_mu=global_mu_o,predictions=out_o,true_input=onehot_words_pl,posterior_logsig=logsig_state_out_p,posterior_mu=mean_state_out_p,post_samples=word_state_out_p,reuse=None)
@@ -175,7 +175,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
 
     # clipping gradients
     ######
-    lr = 1e-3
+    lr = 1e-4
     opt = tf.train.AdamOptimizer(lr)
     grads_t, vars_t = zip(*opt.compute_gradients(cost))
     clipped_grads_t, grad_norm_t = tf.clip_by_global_norm(grads_t, clip_norm=5.0)
