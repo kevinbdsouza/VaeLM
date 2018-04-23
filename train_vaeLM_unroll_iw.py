@@ -175,7 +175,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
 
     # clipping gradients
     ######
-    lr = 1e-4
+    lr = 1e-3
     opt = tf.train.AdamOptimizer(lr)
     grads_t, vars_t = zip(*opt.compute_gradients(cost))
     clipped_grads_t, grad_norm_t = tf.clip_by_global_norm(grads_t, clip_norm=5.0)
