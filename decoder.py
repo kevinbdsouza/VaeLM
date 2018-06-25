@@ -181,7 +181,7 @@ class Decoder:
         mask = tf.reduce_sum(true_input, -1)
         # reconstruction = tf.reduce_sum(tf.reduce_sum(-true_input*tf.log(predictions+1e-9),axis=-1),-1)
         reconstruction = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(true_input, -1), logits=predictions) * mask
-	reconstruction = tf.reduce_sum(reconstruction,-1)
+        reconstruction = tf.reduce_sum(reconstruction,-1)
         #reconstruction = tf.reduce_sum(reconstruction*eow_mask,-1)
         # have to be very careful of order of the mean/stddev parmeters
         # outer reduce sum for each KL term

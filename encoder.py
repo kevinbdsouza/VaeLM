@@ -176,145 +176,145 @@ def get_output_sentences(index2token, indices):
 
 
 class Encoder:
-	def __init__(self, **kwargs):
-	    # self.data =kwargs['data']
-	    # self.sentences =kwargs['sentences']
-	    self.vocabulary_size = kwargs['vocabulary_size']
-	    # self.max_word_length = kwargs['max_word_length']
-	    self.max_char_len = kwargs['max_char_len']
-	    self.batch_size = kwargs['batch_size']
-	    self.input_size = kwargs['input_size']
-	    self.hidden_size = kwargs['hidden_size']
-	    
+    def __init__(self, **kwargs):
+        # self.data =kwargs['data']
+        # self.sentences =kwargs['sentences']
+        self.vocabulary_size = kwargs['vocabulary_size']
+        # self.max_word_length = kwargs['max_word_length']
+        self.max_char_len = kwargs['max_char_len']
+        self.batch_size = kwargs['batch_size']
+        self.input_size = kwargs['input_size']
+        self.hidden_size = kwargs['hidden_size']
 
-	def vanilla_encoder(self, inputs, seq_length, reuse):
-	    inputs = tf.reshape(inputs, [-1, self.vocabulary_size])
-	    with tf.variable_scope('projection', reuse=reuse):
-	        inputs = tf.layers.dense(inputs=inputs, units=self.input_size, activation=None)
-	    inputs = tf.reshape(inputs, [self.batch_size, self.max_char_len, self.input_size])
-	    cell = tf.contrib.rnn.LSTMCell(self.hidden_size)
-	    with tf.variable_scope('vanilla_rnn_enc', reuse=reuse):
-	        _, state = tf.nn.dynamic_rnn(cell=cell, inputs=inputs, dtype=tf.float32, sequence_length=seq_length)
 
-	    with tf.variable_scope('lat_var', reuse=reuse):
-	        out = tf.layers.dense(inputs=state[-1], units=self.hidden_size * 2, activation=tf.nn.relu)
-	        mu, logsig = tf.split(tf.layers.dense(inputs=out, units=self.hidden_size * 2, activation=None), 2, axis=-1)
-	    eps = tf.random_normal(shape=[self.batch_size], dtype=tf.float32)
-	    lat_var = mu + tf.exp(logsig) * eps
-	    return lat_var, mu, logsig
+    def vanilla_encoder(self, inputs, seq_length, reuse):
+        inputs = tf.reshape(inputs, [-1, self.vocabulary_size])
+        with tf.variable_scope('projection', reuse=reuse):
+            inputs = tf.layers.dense(inputs=inputs, units=self.input_size, activation=None)
+        inputs = tf.reshape(inputs, [self.batch_size, self.max_char_len, self.input_size])
+        cell = tf.contrib.rnn.LSTMCell(self.hidden_size)
+        with tf.variable_scope('vanilla_rnn_enc', reuse=reuse):
+            _, state = tf.nn.dynamic_rnn(cell=cell, inputs=inputs, dtype=tf.float32, sequence_length=seq_length)
 
-	# our [494, 52, 61] tensor becomes [[52, 61], [52, 61], ...]
-	def run_encoder(self, train, inputs, word_pos, sentence_lens, reuse):
-		
-		inputs = tf.reshape(inputs, [-1, self.vocabulary_size])
-		print('inputs_1 {}'.format(inputs))
-		with tf.variable_scope('projection1', reuse=reuse):
-		    inputs = tf.layers.dense(inputs=inputs, units=self.input_size, activation=None)
+        with tf.variable_scope('lat_var', reuse=reuse):
+            out = tf.layers.dense(inputs=state[-1], units=self.hidden_size * 2, activation=tf.nn.relu)
+            mu, logsig = tf.split(tf.layers.dense(inputs=out, units=self.hidden_size * 2, activation=None), 2, axis=-1)
+        eps = tf.random_normal(shape=[self.batch_size], dtype=tf.float32)
+        lat_var = mu + tf.exp(logsig) * eps
+        return lat_var, mu, logsig
 
-        '''
-		inputs = tf.reshape(inputs, [self.batch_size, self.max_char_len, self.input_size])
-		inputs.set_shape([self.batch_size, self.max_char_len, self.input_size])
-		sentence_lens = tf.cast(sentence_lens,dtype=tf.int32)
+    # our [494, 52, 61] tensor becomes [[52, 61], [52, 61], ...]
+    def run_encoder(self, train, inputs, word_pos, sentence_lens, reuse):
 
-		#Bi LSTM
-		with tf.variable_scope('encoder_bi', reuse=reuse):
-			cell1 = tf.contrib.rnn.LSTMCell(num_units=self.input_size)
-			cell2 = tf.contrib.rnn.LSTMCell(num_units=self.input_size)
-			values, _ = tf.nn.bidirectional_dynamic_rnn(inputs=inputs, dtype=tf.float32, cell_bw=cell1,
-			                                                 cell_fw=cell2, sequence_length=sentence_lens)
-			print('values {}'.format(values))
-
-		inputs = tf.concat(values,2)
-		print('bi_outputs {}'.format(inputs))
-
-		#input projection
-		inputs = tf.reshape(inputs, [-1, self.input_size*2])
-		print('inputs_2 {}'.format(inputs))
-		with tf.variable_scope('projection', reuse=reuse):
-		    inputs = tf.layers.dense(inputs=inputs, units=self.input_size, activation=None)
-
-		print('inputs_3 {}'.format(inputs))
+        inputs = tf.reshape(inputs, [-1, self.vocabulary_size])
+        print('inputs_1 {}'.format(inputs))
+        with tf.variable_scope('projection1', reuse=reuse):
+            inputs = tf.layers.dense(inputs=inputs, units=self.input_size, activation=None)
 
         '''
+        inputs = tf.reshape(inputs, [self.batch_size, self.max_char_len, self.input_size])
+        inputs.set_shape([self.batch_size, self.max_char_len, self.input_size])
+        sentence_lens = tf.cast(sentence_lens,dtype=tf.int32)
+    
+        #Bi LSTM
+        with tf.variable_scope('encoder_bi', reuse=reuse):
+            cell1 = tf.contrib.rnn.LSTMCell(num_units=self.input_size)
+            cell2 = tf.contrib.rnn.LSTMCell(num_units=self.input_size)
+            values, _ = tf.nn.bidirectional_dynamic_rnn(inputs=inputs, dtype=tf.float32, cell_bw=cell1,
+                                                             cell_fw=cell2, sequence_length=sentence_lens)
+            print('values {}'.format(values))
+    
+        inputs = tf.concat(values,2)
+        print('bi_outputs {}'.format(inputs))
+    
+        #input projection
+        inputs = tf.reshape(inputs, [-1, self.input_size*2])
+        print('inputs_2 {}'.format(inputs))
+        with tf.variable_scope('projection', reuse=reuse):
+            inputs = tf.layers.dense(inputs=inputs, units=self.input_size, activation=None)
+    
+        print('inputs_3 {}'.format(inputs))
+    
+        '''
 
-		inputs = tf.reshape(inputs, [self.batch_size, self.max_char_len, self.input_size])
-		inputs.set_shape([self.batch_size, self.max_char_len, self.input_size])
+        inputs = tf.reshape(inputs, [self.batch_size, self.max_char_len, self.input_size])
+        inputs.set_shape([self.batch_size, self.max_char_len, self.input_size])
 
-		inputs_t = tf.transpose(inputs, perm=[1, 0, 2])
-		inputs_t.set_shape([self.max_char_len, self.batch_size, self.input_size])
-		_inputs_ta = tf.TensorArray(dtype=tf.float32, size=self.max_char_len, name='char_array')
-		_inputs_ta = _inputs_ta.unstack(inputs_t)
+        inputs_t = tf.transpose(inputs, perm=[1, 0, 2])
+        inputs_t.set_shape([self.max_char_len, self.batch_size, self.input_size])
+        _inputs_ta = tf.TensorArray(dtype=tf.float32, size=self.max_char_len, name='char_array')
+        _inputs_ta = _inputs_ta.unstack(inputs_t)
 
-		cell = tf.contrib.rnn.LSTMCell(self.hidden_size)
-		output_ta = tf.TensorArray(size=self.max_char_len, dtype=tf.float32, name='word_array')
-		mean_ta = tf.TensorArray(size=self.max_char_len, dtype=tf.float32, name='mean_array')
-		sigma_ta = tf.TensorArray(size=self.max_char_len, dtype=tf.float32, name='sigma_array')
-		word_pos = tf.convert_to_tensor(word_pos, dtype=tf.float32)
+        cell = tf.contrib.rnn.LSTMCell(self.hidden_size)
+        output_ta = tf.TensorArray(size=self.max_char_len, dtype=tf.float32, name='word_array')
+        mean_ta = tf.TensorArray(size=self.max_char_len, dtype=tf.float32, name='mean_array')
+        sigma_ta = tf.TensorArray(size=self.max_char_len, dtype=tf.float32, name='sigma_array')
+        word_pos = tf.convert_to_tensor(word_pos, dtype=tf.float32)
 
-		# create loop_fn for raw_rnn
-		def loop_fn(time, cell_output, cell_state, loop_state):
-		    emit_output = cell_output  # == None if time = 0
+        # create loop_fn for raw_rnn
+        def loop_fn(time, cell_output, cell_state, loop_state):
+            emit_output = cell_output  # == None if time = 0
 
-		    if cell_output is None:  # time = 0
-		        next_cell_state = cell.zero_state(self.batch_size, tf.float32)
-		        sample_loop_state = output_ta
-		        mean_loop_state = mean_ta
-		        sigma_loop_state = sigma_ta
-		        next_loop_state = (sample_loop_state, mean_loop_state, sigma_loop_state)
-		    # next_input = tf.zeros(shape=[self.batch_size,self.input_size],dtype=tf.float32)
+            if cell_output is None:  # time = 0
+                next_cell_state = cell.zero_state(self.batch_size, tf.float32)
+                sample_loop_state = output_ta
+                mean_loop_state = mean_ta
+                sigma_loop_state = sigma_ta
+                next_loop_state = (sample_loop_state, mean_loop_state, sigma_loop_state)
+            # next_input = tf.zeros(shape=[self.batch_size,self.input_size],dtype=tf.float32)
 
-		    else:
-		        word_slice = tf.tile(word_pos[:, time - 1], [self.hidden_size])
-		        word_slice = tf.reshape(word_slice, [self.hidden_size, self.batch_size])
-		        word_slice = tf.transpose(word_slice, perm=[1, 0])
-		        next_sampled_input = tf.multiply(cell_output, word_slice)
+            else:
+                word_slice = tf.tile(word_pos[:, time - 1], [self.hidden_size])
+                word_slice = tf.reshape(word_slice, [self.hidden_size, self.batch_size])
+                word_slice = tf.transpose(word_slice, perm=[1, 0])
+                next_sampled_input = tf.multiply(cell_output, word_slice)
 
-		        # reparametrization
-		        z_concat = tf.contrib.layers.fully_connected(next_sampled_input, 2 * self.hidden_size)
-		        z_concat = tf.contrib.layers.fully_connected(z_concat, 2 * self.hidden_size,activation_fn=None)
+                # reparametrization
+                z_concat = tf.contrib.layers.fully_connected(next_sampled_input, 2 * self.hidden_size)
+                z_concat = tf.contrib.layers.fully_connected(z_concat, 2 * self.hidden_size,activation_fn=None)
 
-		        z_mean = z_concat[:, :self.hidden_size]
-		        z_mean = z_mean * 10
-		        z_log_sigma_sq = z_concat[:, self.hidden_size:self.hidden_size * 2]
-		        z_log_sigma_sq = z_log_sigma_sq - 3
-		        eps = tf.random_normal((self.batch_size, self.hidden_size), 0, 1, dtype=tf.float32)
+                z_mean = z_concat[:, :self.hidden_size]
+                z_mean = z_mean * 10
+                z_log_sigma_sq = z_concat[:, self.hidden_size:self.hidden_size * 2]
+                z_log_sigma_sq = z_log_sigma_sq - 3
+                eps = tf.random_normal((self.batch_size, self.hidden_size), 0, 1, dtype=tf.float32)
 
-		        z_sample = tf.add(z_mean, tf.multiply(tf.exp(z_log_sigma_sq), eps))
+                z_sample = tf.add(z_mean, tf.multiply(tf.exp(z_log_sigma_sq), eps))
 
-		        z_sample = tf.multiply(z_sample, word_slice)
-		        z_mean = tf.multiply(z_mean, word_slice)
-		        z_log_sigma_sq = tf.multiply(z_log_sigma_sq, word_slice)
-		        if train:
-		            next_cell_state = z_sample
-		        else:
-		            next_cell_state = z_mean
-		        sample_loop_state = loop_state[0].write(time - 1, next_cell_state)
-		        mean_loop_state = loop_state[1].write(time - 1, z_mean)
-		        sigma_loop_state = loop_state[2].write(time - 1, z_log_sigma_sq)
-		        next_loop_state = (sample_loop_state, mean_loop_state, sigma_loop_state)
+                z_sample = tf.multiply(z_sample, word_slice)
+                z_mean = tf.multiply(z_mean, word_slice)
+                z_log_sigma_sq = tf.multiply(z_log_sigma_sq, word_slice)
+                if train:
+                    next_cell_state = z_sample
+                else:
+                    next_cell_state = z_mean
+                sample_loop_state = loop_state[0].write(time - 1, next_cell_state)
+                mean_loop_state = loop_state[1].write(time - 1, z_mean)
+                sigma_loop_state = loop_state[2].write(time - 1, z_log_sigma_sq)
+                next_loop_state = (sample_loop_state, mean_loop_state, sigma_loop_state)
 
-		        word_slice = tf.logical_not(tf.cast(word_slice, dtype=tf.bool))
-		        word_slice = tf.cast(word_slice, dtype=tf.float32)
-			next_cell_state =tf.contrib.layers.layer_norm(next_cell_state) 
-		        next_cell_state = next_cell_state + tf.multiply(cell_state[0], word_slice)
-		        next_cell_state = tf.contrib.rnn.LSTMStateTuple(next_cell_state, cell_output)
+                word_slice = tf.logical_not(tf.cast(word_slice, dtype=tf.bool))
+                word_slice = tf.cast(word_slice, dtype=tf.float32)
+                next_cell_state =tf.contrib.layers.layer_norm(next_cell_state)
+                next_cell_state = next_cell_state + tf.multiply(cell_state[0], word_slice)
+                next_cell_state = tf.contrib.rnn.LSTMStateTuple(next_cell_state, cell_output)
 
-		    next_input = tf.cond(time < self.max_char_len, lambda: _inputs_ta.read(time),
-		                         lambda: tf.zeros(shape=[self.batch_size, self.input_size], dtype=tf.float32))
+            next_input = tf.cond(time < self.max_char_len, lambda: _inputs_ta.read(time),
+                                 lambda: tf.zeros(shape=[self.batch_size, self.input_size], dtype=tf.float32))
 
-		    elements_finished = (time >= (self.max_char_len))
+            elements_finished = (time >= (self.max_char_len))
 
-		    return (elements_finished, next_input, next_cell_state, emit_output, next_loop_state)
+            return (elements_finished, next_input, next_cell_state, emit_output, next_loop_state)
 
-		with tf.variable_scope('encoder_rnn', reuse=reuse):
-		    outputs_ta, final_state_out, word_state = tf.nn.raw_rnn(cell, loop_fn)
+        with tf.variable_scope('encoder_rnn', reuse=reuse):
+            outputs_ta, final_state_out, word_state = tf.nn.raw_rnn(cell, loop_fn)
 
-		word_state_out = word_state[0].stack()
-		mean_state_out = word_state[1].stack()
-		sigma_state_out = word_state[2].stack()
-		outputs_out = outputs_ta.stack()
+        word_state_out = word_state[0].stack()
+        mean_state_out = word_state[1].stack()
+        sigma_state_out = word_state[2].stack()
+        outputs_out = outputs_ta.stack()
 
-		return word_state_out, mean_state_out, sigma_state_out
+        return word_state_out, mean_state_out, sigma_state_out
 
 
 if __name__ == "__main__":

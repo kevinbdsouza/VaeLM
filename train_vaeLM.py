@@ -221,11 +221,11 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
     logger.addHandler(hdlr)
     logger.setLevel(logging.DEBUG)
     for epoch in range(n_epochs):
-        inds = range(np.shape(onehot_words)[0])
+        inds = list(range(np.shape(onehot_words)[0]))
         np.random.shuffle(inds)
         for count,batch in enumerate(inds):
             anneal_c_o,train_predictions_o_np, train_cost_o_np, _, global_step_o_np,train_rec_cost_o_np,_,_,_,_,summary_inf_train_o=sess.run([anneal,out_o,cost,train_step,global_step,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,summary_inf_train],feed_dict={mask_kl_pl:kl_mask[batch],onehot_words_pl:onehot_words[batch],word_pos_pl:word_pos[batch],perm_mat_pl:perm_mat[batch],sent_word_len_list_pl:lat_sent_len_list[batch],sent_char_len_list_pl:sentence_lens_nchars[batch]})
-	    #logger.debug('anneal const {}'.format(anneal_c))
+        #logger.debug('anneal const {}'.format(anneal_c))
             #logger.debug('ground truth {}'.format(get_output_sentences(index2token, ground_truth[0:10])))
             if global_step_o_np %1==0:
                 # testing on the validation set
@@ -237,26 +237,28 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
 
                 predictions = np.argmax(train_predictions_o_np[0:10],axis=-1)
                 ground_truth = np.argmax(onehot_words[batch][0:10], axis=-1)
-		val_predictions = np.argmax(val_predictions_o_np,axis=-1)
-		true= np.argmax(onehot_words_val[rind],-1)
-		num =np.sum([np.sum(val_predictions[j][0:i] == true[j][0:i]) for j,i in enumerate(sentence_lens_nchars_val[rind])])
+                val_predictions = np.argmax(val_predictions_o_np,axis=-1)
+                true= np.argmax(onehot_words_val[rind],-1)
+                num =np.sum([np.sum(val_predictions[j][0:i] == true[j][0:i]) for j,i in enumerate(sentence_lens_nchars_val[rind])])
 
-		denom = np.sum(sentence_lens_nchars_val[rind])
-		accuracy = np.true_divide(num,denom)*100
-		logger.debug('accuracy on random val batch {}'.format(accuracy))
+                denom = np.sum(sentence_lens_nchars_val[rind])
+                accuracy = np.true_divide(num,denom)*100
+                logger.debug('accuracy on random val batch {}'.format(accuracy))
                 logger.debug('predictions {}'.format([[index2token[j] for j in i] for i in predictions[0:10,0:50]]))
                 logger.debug('ground truth {}'.format([[index2token[j] for j in i] for i in ground_truth[0:10,0:50]]))
                 logger.debug('global step: {} Epoch: {} count: {} anneal:{}'.format(global_step_o_np,epoch,count,anneal_c_o))
                 logger.debug('train cost: {}'.format(train_cost_o_np))
                 logger.debug('validation cost {}'.format(val_cost_o_np))
-		logger.debug('validation predictions {}'.format([[index2token[j] for j in i] for i in val_predictions[0:10,0:50]]))
+                logger.debug('validation predictions {}'.format([[index2token[j] for j in i] for i in val_predictions[0:10,0:50]]))
+
                 summary_writer.add_summary(summary_inf_test_o, global_step_o_np)
                 summary_writer.flush()
+
             if global_step_o_np % 1000==0:
                 # testing on the generative model
                 gen_o_np = sess.run([gen_samples])
-	        gen_pred = np.argmax(gen_o_np[0:10],axis=-1)
-		logger.debug('GEN predictions {}'.format([[index2token[j] for j in i] for i in gen_pred[0][0:10,0:50]]))
+                gen_pred = np.argmax(gen_o_np[0:10],axis=-1)
+                logger.debug('GEN predictions {}'.format([[index2token[j] for j in i] for i in gen_pred[0][0:10,0:50]]))
 
             summary_writer.add_summary(summary_inf_train_o, global_step_o_np)
             summary_writer.flush()
