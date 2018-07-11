@@ -20,12 +20,12 @@ def experiment(exp_name):
     from train_vaeLM import train, prep_perm_matrix, permute_encoder_output
     from pre import read
     onehot_words, word_pos, sentence_lens_nchars, sentence_lens_nwords, vocabulary_size, max_char_len = read(
-        file_name='/Users/kevindsouza/Documents/UBC/Research/ML/VaeLM/train.h5', train=True)
+        file_name='/home/skycope/Documents/dev/VaeLM/train.h5', train=True)
     onehot_words_val, word_pos_val, sentence_lens_nchars_val, sentence_lens_nwords_val, _, _ = read(
-        file_name='/Users/kevindsouza/Documents/UBC/Research/ML/VaeLM/test.h5', train=False)
+        file_name='/home/skycope/Documents/dev/VaeLM/test.h5', train=False)
 
     max_char_len = 371
-    batch_size = 40
+    batch_size = 20
     hidden_size = 256
     decoder_dim = 256
     decoder_units_p3 = 256
@@ -53,7 +53,7 @@ def experiment(exp_name):
                     'hidden_size': hidden_size}
 
     print("start")
-    train(log_dir='/Users/kevindsouza/Documents/UBC/Research/ML/VaeLM/log/', n_epochs=500, network_dict=network_dict,
+    train(log_dir='/home/skycope/Documents/dev/VaeLM/log', n_epochs=500, network_dict=network_dict,
           index2token=index2token, **train_dict)
     print("end")
 

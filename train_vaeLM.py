@@ -157,13 +157,13 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
 
     # clipping gradients
     ######
-    lr = 1e-3
+    lr = 1e-4
     opt = tf.train.AdamOptimizer(lr)
     grads_t, vars_t = zip(*opt.compute_gradients(cost))
     clipped_grads_t, grad_norm_t = tf.clip_by_global_norm(grads_t, clip_norm=5.0)
     train_step = opt.apply_gradients(zip(clipped_grads_t, vars_t), global_step=global_step)
     regex = re.compile('[^a-zA-Z]')
-    sum_grad_hist = [tf.summary.histogram(name=regex.sub('',str(j)),values=i) for i,j in zip(clipped_grads_t,vars_t)]
+    sum_grad_hist = [tf.summary.histogram(name=regex.sub('',str(j)),values=i) for i,j in zip(clipped_grads_t,vars_t) if i is not None]
     norm_grad = tf.summary.scalar(name='grad_norm',tensor=grad_norm_t)
 
     ######
@@ -227,7 +227,7 @@ def train(log_dir,n_epochs,network_dict,index2token,**kwargs):
             anneal_c_o,train_predictions_o_np, train_cost_o_np, _, global_step_o_np,train_rec_cost_o_np,_,_,_,_,summary_inf_train_o=sess.run([anneal,out_o,cost,train_step,global_step,reconstruction,kl_p3,kl_p1,kl_global,kl_p2,summary_inf_train],feed_dict={mask_kl_pl:kl_mask[batch],onehot_words_pl:onehot_words[batch],word_pos_pl:word_pos[batch],perm_mat_pl:perm_mat[batch],sent_word_len_list_pl:lat_sent_len_list[batch],sent_char_len_list_pl:sentence_lens_nchars[batch]})
         #logger.debug('anneal const {}'.format(anneal_c))
             #logger.debug('ground truth {}'.format(get_output_sentences(index2token, ground_truth[0:10])))
-            if global_step_o_np %1==0:
+            if global_step_o_np %100==0:
                 # testing on the validation set
                 rind=np.random.randint(low=0,high=np.shape(onehot_words_val)[-1])
                 val_predictions_o_np, val_cost_o_np,summary_inf_test_o = sess.run(
