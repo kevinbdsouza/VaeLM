@@ -2,10 +2,50 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="1f32d3ac-8774-4930-babe-927b2a5bbc51" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/decoder.py" beforeDir="false" afterPath="$PROJECT_DIR$/decoder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/encoder.py" beforeDir="false" afterPath="$PROJECT_DIR$/encoder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_local.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_local.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_vaeLM.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_vaeLM.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Old/Vae.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Old/input_data.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/decoder.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/decoders/decoder_decxl.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/decoders/decoder_newgen.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/decoders/decoder_unroll_iw.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/decoders/decoder_unrolledprior.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/decoders/decoder_van.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/decoders/decoder_woglobal.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/encoder.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/encoders/encoder_all.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/encoders/encoder_gating.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/encoders/encoder_multi.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/encoders/encoder_preprocess.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/encoders/encoder_sample.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/encoders/encoder_unroll_iw.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/encoders/encoder_unrolledprior.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/encoders/encoder_van.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/encoders/sampling/encoder_sample.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/encoders/sampling/pre_sample.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/encoders/sampling/run_local_sample.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/encoders/sampling/train_vaeLM_sample.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/encoders/wo_rnn_hierarchy/decoder.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/encoders/wo_rnn_hierarchy/encoder.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/encoders/wo_rnn_hierarchy/train_vaeLM.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/notebooks/Character_level.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/notebooks/Clm_foreign.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pre.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/run_local.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/EXAMPLERUNNINGSCRIPT0401_nokl_lr1e3_clip_512_detinit_decxl_vae_an2.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/EXAMPLESCRIPT_t1_256_lr1e4_clip.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/SCRIPT_TO_RUN_LATEST_MODEL.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/SCRIPT_TO_RUN_LATEST_MODEL.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/get-pip.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/get_data.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/run.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/run_local.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/train_fns/train_vaeLM_checkprior.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/train_fns/train_vaeLM_unroll_iw.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/train_fns/train_vaeLM_unrolledprior.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/train_fns/train_vanvae.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/train_vaeLM.py" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -16,40 +56,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="run_local.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/run_local.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="180">
-              <caret line="12" column="22" selection-start-line="12" selection-start-column="22" selection-end-line="12" selection-end-column="22" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="pre.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pre.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-697">
-              <folding>
-                <element signature="e#0#14#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="decoder.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/decoder.py">
+        <entry file="file://$PROJECT_DIR$/src/decoder.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="225">
-              <caret line="189" column="21" selection-start-line="189" selection-start-column="21" selection-end-line="189" selection-end-column="21" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="encoder.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/encoder.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="4650">
-              <caret line="310" selection-start-line="310" selection-end-line="310" />
+            <state>
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
               </folding>
@@ -57,11 +67,40 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="train_vaeLM.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/train_vaeLM.py">
+      <file leaf-file-name="encoder.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/encoder.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="165">
-              <caret line="11" column="22" selection-start-line="11" selection-start-column="22" selection-end-line="11" selection-end-column="22" />
+            <state>
+              <folding>
+                <element signature="e#0#23#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="load_model.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/load_model.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="60">
+              <caret line="4" column="99" selection-start-line="4" selection-start-column="99" selection-end-line="4" selection-end-column="99" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="run_local.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/run_local.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="332">
+              <caret line="55" column="74" selection-start-line="55" selection-start-column="74" selection-end-line="55" selection-end-column="74" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="train_vaeLM.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/train_vaeLM.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="54">
+              <caret line="237" column="101" lean-forward="true" selection-start-line="237" selection-start-column="30" selection-end-line="237" selection-end-column="101" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -71,29 +110,57 @@
       </file>
     </leaf>
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>tile</find>
+      <find>train_predictions_o_np</find>
+      <find>out_o</find>
+      <find>anneal</find>
+      <find>cost</find>
+      <find>train_step</find>
+      <find>global_step</find>
+      <find>reconstruction</find>
+      <find>kl_p3</find>
+      <find>kl_p1</find>
+      <find>kl_global</find>
+      <find>kl_p2</find>
+      <find>summary_inf_train</find>
+    </findStrings>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/decoder.py" />
         <option value="$PROJECT_DIR$/encoder.py" />
         <option value="$PROJECT_DIR$/run_local.py" />
         <option value="$PROJECT_DIR$/train_vaeLM.py" />
+        <option value="$PROJECT_DIR$/decoder.py" />
+        <option value="$PROJECT_DIR$/load_model.py" />
+        <option value="$PROJECT_DIR$/src/run_local.py" />
+        <option value="$PROJECT_DIR$/src/train_vaeLM.py" />
+        <option value="$PROJECT_DIR$/src/load_model.py" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds">
-    <option name="y" value="23" />
-    <option name="width" value="1440" />
-    <option name="height" value="807" />
+  <component name="ProjectFrameBounds" fullScreen="true">
+    <option name="width" value="1920" />
+    <option name="height" value="1080" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -101,11 +168,15 @@
               <item name="VaeLM" type="b2602c69:ProjectViewProjectNode" />
               <item name="VaeLM" type="462c0819:PsiDirectoryNode" />
             </path>
+            <path>
+              <item name="VaeLM" type="b2602c69:ProjectViewProjectNode" />
+              <item name="VaeLM" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+            </path>
           </expand>
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -124,7 +195,61 @@
       </list>
     </option>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.load_model">
+    <configuration name="decoder" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="VaeLM" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/decoder.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
+    <configuration name="encoder" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="VaeLM" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$USER_HOME$/anaconda3/envs/TensorflowEnv/bin/python3" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/encoder.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
+    <configuration name="load_model" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="VaeLM" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$USER_HOME$/anaconda3/envs/TensorflowEnv/bin/python3" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/load_model.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
     <configuration name="run_local" type="PythonConfigurationType" factoryName="Python">
       <module name="VaeLM" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -143,8 +268,17 @@
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
     </configuration>
+    <list>
+      <item itemvalue="Python.run_local" />
+      <item itemvalue="Python.decoder" />
+      <item itemvalue="Python.encoder" />
+      <item itemvalue="Python.load_model" />
+    </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.load_model" />
+        <item itemvalue="Python.encoder" />
+        <item itemvalue="Python.decoder" />
         <item itemvalue="Python.run_local" />
       </list>
     </recent_temporary>
@@ -163,18 +297,18 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1440" height="807" extended-state="0" />
-    <editor active="true" />
+    <frame x="0" y="0" width="1920" height="1080" extended-state="0" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.21212122" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.14955239" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.34929577" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32935324" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.47263682" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.32957748" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Terminal" order="7" weight="0.32957748" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="7" visible="true" weight="0.32935324" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.3960199" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
@@ -182,13 +316,73 @@
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info anchor="bottom" id="Find" order="1" />
     </layout>
   </component>
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints-dialog>
+        <breakpoints-dialog />
+      </breakpoints-dialog>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+      <option name="time" value="14" />
+    </breakpoint-manager>
+  </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/run_local.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="4" column="23" selection-start-line="4" selection-start-column="23" selection-end-line="4" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pre.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#0#14#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/encoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4110">
+          <caret line="283" lean-forward="true" selection-start-line="283" selection-end-line="283" />
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/train_vaeLM.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2205">
+          <caret line="152" selection-start-line="152" selection-end-line="152" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/decoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3090">
+          <caret line="206" column="99" lean-forward="true" selection-start-line="206" selection-start-column="99" selection-end-line="206" selection-end-column="99" />
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/run_local.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="330">
@@ -210,49 +404,113 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/encoder_all.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/decoder.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="225">
-          <caret line="189" column="21" selection-start-line="189" selection-start-column="21" selection-end-line="189" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/encoder.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4650">
-          <caret line="310" selection-start-line="310" selection-end-line="310" />
-          <folding>
-            <element signature="e#0#23#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/encoder_all.py" />
     <entry file="file://$PROJECT_DIR$/pre.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-697">
+        <state>
           <folding>
             <element signature="e#0#14#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/train_vaeLM.py">
+    <entry file="file://$USER_HOME$/anaconda3/envs/TensorflowEnv/lib/python3.6/site-packages/tensorflow/python/ops/math_ops.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="165">
-          <caret line="11" column="22" selection-start-line="11" selection-start-column="22" selection-end-line="11" selection-end-column="22" />
+        <state relative-caret-position="170">
+          <caret line="757" selection-start-line="757" selection-end-line="757" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/envs/TensorflowEnv/lib/python3.6/site-packages/tensorflow/python/ops/rnn.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="125">
+          <caret line="1104" selection-start-line="1104" selection-end-line="1104" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/encoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-229">
+          <caret line="283" selection-start-line="283" selection-end-line="283" />
           <folding>
-            <element signature="e#0#9#0" expanded="true" />
+            <element signature="e#0#23#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/run_local.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="12" column="22" selection-start-line="12" selection-start-column="22" selection-end-line="12" selection-end-column="22" />
+        <state relative-caret-position="205">
+          <caret line="20" column="24" selection-start-line="20" selection-start-column="24" selection-end-line="20" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/decoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="174">
+          <caret line="231" column="64" selection-start-line="231" selection-start-column="64" selection-end-line="231" selection-end-column="64" />
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/train_vaeLM.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="582">
+          <caret line="222" column="42" selection-start-line="222" selection-start-column="42" selection-end-line="222" selection-end-column="42" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/load_model.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="345">
+          <caret line="23" selection-start-line="23" selection-end-line="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/decoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/encoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/train_vaeLM.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="54">
+          <caret line="237" column="101" lean-forward="true" selection-start-line="237" selection-start-column="30" selection-end-line="237" selection-end-column="101" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/run_local.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="332">
+          <caret line="55" column="74" selection-start-line="55" selection-start-column="74" selection-end-line="55" selection-end-column="74" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/load_model.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="4" column="99" selection-start-line="4" selection-start-column="99" selection-end-line="4" selection-end-column="99" />
         </state>
       </provider>
     </entry>
