@@ -368,7 +368,8 @@ class Decoder:
         predictions = self.decoder_p3(inputs=context, reuse=True,
                                       char_sequence_length=np.repeat(self.num_sentence_characters, self.batch_size, axis=-1),
                                       max_time=self.num_sentence_characters)
-        return predictions
+        gen_samples = tf.identity(predictions,name="gen_samples")
+        return gen_samples
 
     def vanilla_decoder(self, inputs, reuse):
 

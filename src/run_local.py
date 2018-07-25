@@ -1,24 +1,7 @@
-import h5py
-
+from train_vaeLM import train
+from create_h5 import read
 
 def experiment(exp_name):
-    from decoder import Decoder
-    import encoder
-    import tensorflow as tf
-    import numpy as np
-    from functools import reduce
-    import tensorflow as tf
-    import numpy as np
-    from tensorflow.python.ops.rnn import _transpose_batch_time
-    import collections
-    import os
-    import argparse
-    import datetime as dt
-    from collections import Counter
-    from random import random
-    from nltk import word_tokenize
-    from train_vaeLM import train, prep_perm_matrix, permute_encoder_output
-    from pre import read
     onehot_words, word_pos, sentence_lens_nchars, sentence_lens_nwords, vocabulary_size, max_char_len = read(
         file_name='/Users/kevindsouza/Documents/UBC/Research/ML/VaeLM/data/english/train.h5', train=True)
     onehot_words_val, word_pos_val, sentence_lens_nchars_val, sentence_lens_nwords_val, _, _ = read(
@@ -54,7 +37,7 @@ def experiment(exp_name):
 
     print("start")
     train(log_dir='/Users/kevindsouza/Documents/UBC/Research/ML/VaeLM/log/', n_epochs=500, network_dict=network_dict,
-          index2token=index2token, **train_dict)
+          index2token=index2token,mode = "half_trained", **train_dict)
     print("end")
 
 

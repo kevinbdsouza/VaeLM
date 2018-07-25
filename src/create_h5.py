@@ -1,7 +1,6 @@
-import encoder
 import h5py
-import numpy as np
 from sys import argv
+import preprocess
 
 
 def write(file_name, list_inp, train):
@@ -61,9 +60,9 @@ def read(file_name, train=True):
 if __name__ == '__main__':
     # python arguments expected from argv, i.e. just the name of the file and directory train_file.h5, valid_file.h5
 
-    onehot_words, word_pos, sentence_lens_nchars, sentence_lens_nwords, vocabulary_size, index2token, max_char_len = encoder.run_preprocess(
+    onehot_words, word_pos, sentence_lens_nchars, sentence_lens_nwords, vocabulary_size, index2token, max_char_len = preprocess.run_preprocess(
         mode='train')
-    onehot_words_val, word_pos_val, sentence_lens_nchars_val, sentence_lens_nwords_val, vocabulary_size_val, index2token_val, max_char_len = encoder.run_preprocess(
+    onehot_words_val, word_pos_val, sentence_lens_nchars_val, sentence_lens_nwords_val, vocabulary_size_val, index2token_val, _ = preprocess.run_preprocess(
         mode='val')
 
     l_train = [onehot_words, word_pos, sentence_lens_nchars, sentence_lens_nwords, vocabulary_size, index2token,

@@ -61,6 +61,6 @@ if __name__ == '__main__':
 
     pool = WorkerPool(1, worker_types='gpu_gtx_1080_ti')
 
-    pool.attach_files(['train_vaeLM.py', 'decoder.py', 'encoder.py', 'cluster_print.py', 'pre.py', h5py])
+    pool.attach_files(['train_vaeLM.py', 'decoder.py', 'encoder.py', 'cluster_print.py', 'create_h5.py', h5py])
 
     pool(experiment, [exp_name])
