@@ -110,19 +110,23 @@ class Encoder:
                 z_sample = tf.multiply(z_sample, word_slice)
                 z_mean = tf.multiply(z_mean, word_slice)
                 z_log_sigma = tf.multiply(z_log_sigma, word_slice)
-                if train:
-                    next_cell_state = z_sample
-                else:
-                    next_cell_state = z_mean
-                sample_loop_state = loop_state[0].write(time - 1, next_cell_state)
+
+                # if train:
+                #     next_cell_state = z_sample
+                # else:
+                #     next_cell_state = z_mean
+
+                sample_loop_state = loop_state[0].write(time - 1, z_sample)
                 mean_loop_state = loop_state[1].write(time - 1, z_mean)
                 sigma_loop_state = loop_state[2].write(time - 1, z_log_sigma)
                 next_loop_state = (sample_loop_state, mean_loop_state, sigma_loop_state)
 
                 word_slice = tf.logical_not(tf.cast(word_slice, dtype=tf.bool))
                 word_slice = tf.cast(word_slice, dtype=tf.float32)
-                next_cell_state =tf.contrib.layers.layer_norm(next_cell_state)
-                next_cell_state = next_cell_state + tf.multiply(cell_state[0], word_slice)
+                #next_cell_state = tf.contrib.layers.layer_norm(next_cell_state)
+                #next_cell_state = next_cell_state + tf.multiply(cell_state[0], word_slice)
+                next_cell_state = tf.multiply(cell_state[0], word_slice)
+                next_cell_state = tf.contrib.layers.layer_norm(next_cell_state)
                 next_cell_state = tf.contrib.rnn.LSTMStateTuple(next_cell_state, cell_output)
 
             next_input = tf.cond(time < self.max_char_len, lambda: _inputs_ta.read(time),

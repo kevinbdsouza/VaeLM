@@ -37,7 +37,7 @@ def experiment(exp_name):
 
     print("start")
     train(log_dir='/Users/kevindsouza/Documents/UBC/Research/ML/VaeLM/log/', n_epochs=500, network_dict=network_dict,
-          index2token=index2token,mode = "half_trained", **train_dict)
+          index2token=index2token,mode = "new_model", **train_dict)
     print("end")
 
 
