@@ -18,7 +18,7 @@ class Decoder:
         self.global_lat_dim = kwargs['global_lat_dim']
         self.decoder_p3_units = kwargs['decoder_p3_units']
 
-    def make_global_latent(self, values, reuse,units_dense):
+    def make_global_latent(self, values, reuse, units_dense):
         mean_pool = tf.reduce_mean(values, axis=-1)
 
         with tf.variable_scope('global_lat_var_scope',reuse=reuse):
@@ -310,7 +310,7 @@ class Decoder:
         self.sum_kl_val = tf.summary.scalar('kl_test', tf.reduce_mean(kl_p3))
         return cost
 
-    def generation(self, global_sample, word_samples):
+    def generation(self, global_sample, word_samples, dense_dim):
         # outputs_ta = tf.TensorArray(dtype=tf.float32, size=self.max_num_lat_words)
         # cell = tf.contrib.rnn.LSTMCell(self.decoder_units)
         # print('GENER samples {}'.format(np.shape(samples)))
@@ -348,9 +348,14 @@ class Decoder:
         #     _, _, loop_state_ta = tf.nn.raw_rnn(cell, loop_fn)
         #     loop_state_out = _transpose_batch_time(loop_state_ta.stack())
 
+        global_mu, global_logsig = self.make_global_latent(reuse=True, values=word_samples,
+                                                           units_dense=dense_dim)
+        eps = tf.random_normal(shape=[self.batch_size, dense_dim], dtype=tf.float32)
+        global_latent = eps * tf.exp(global_logsig) + global_mu
+
         context = self.decoder_p2(num_hidden_word_units=self.lat_word_dim, inputs=word_samples,
                                   char_sequence_length=np.repeat(self.num_sentence_characters, self.batch_size, axis=-1),
-                                  global_latent=global_sample, reuse=True, context_dim=self.decoder_units,
+                                  global_latent=global_latent, reuse=True, context_dim=self.decoder_units,
                                   max_time=self.num_sentence_characters)
         predictions = self.decoder_p3(inputs=context, reuse=True,
                                       char_sequence_length=np.repeat(self.num_sentence_characters, self.batch_size, axis=-1),

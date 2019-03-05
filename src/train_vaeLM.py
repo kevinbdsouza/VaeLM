@@ -143,7 +143,7 @@ def train(log_dir,n_epochs,network_dict,index2token,mode,**kwargs):
         test_cost = decoder.test_calc_cost(mask_kl=mask_kl_pl_val,sentence_word_lens=sent_word_len_list_pl_val,posterior_logsig=logsig_state_out_p_val,post_samples=word_state_out_p_val,global_mu=global_mu_o_val,global_logsig=global_logsig_o_val,global_latent_sample=global_latent_o_val,posterior_mu=mean_state_out_p_val,true_input=onehot_words_pl_val,predictions=test_logits)
 
         #prior generative sampling
-        gen_samples = decoder.generation(global_sample=global_sample,word_samples=word_samples)
+        gen_samples = decoder.generation(global_sample=global_sample,word_samples=word_samples, dense_dim=decoder_dim)
 
         #tensorboard
         tf_summary_train = tf.summary.merge(
