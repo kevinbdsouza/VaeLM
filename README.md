@@ -4,5 +4,6 @@
 
 Contributors:
 
-1. Zaccary Alperstein 
-2. Kevin Dsouza 
+1. Kevin Dsouza 
+2. Zaccary Alperstein 
+
