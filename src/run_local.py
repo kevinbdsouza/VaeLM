@@ -1,6 +1,7 @@
 from train_vaeLM import train
 from create_h5 import read
 
+
 def experiment(exp_name):
     onehot_words, word_pos, sentence_lens_nchars, sentence_lens_nwords, vocabulary_size, max_char_len = read(
         file_name='/Users/kevindsouza/Documents/UBC/Research/ML/VaeLM/data/english/train.h5', train=True)
@@ -37,7 +38,7 @@ def experiment(exp_name):
 
     print("start")
     train(log_dir='/Users/kevindsouza/Documents/UBC/Research/ML/VaeLM/log/', n_epochs=500, network_dict=network_dict,
-          index2token=index2token,mode = "new_model", **train_dict)
+          index2token=index2token, mode="new_model", **train_dict)
     print("end")
 
 

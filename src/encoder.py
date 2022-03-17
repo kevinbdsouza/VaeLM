@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 from nltk import word_tokenize
 
+
 class Encoder:
     def __init__(self, **kwargs):
         self.vocabulary_size = kwargs['vocabulary_size']
@@ -10,7 +11,6 @@ class Encoder:
         self.batch_size = kwargs['batch_size']
         self.input_size = kwargs['input_size']
         self.hidden_size = kwargs['hidden_size']
-
 
     def vanilla_encoder(self, inputs, seq_length, reuse):
         inputs = tf.reshape(inputs, [-1, self.vocabulary_size])
@@ -32,7 +32,7 @@ class Encoder:
     def run_encoder(self, train, inputs, word_pos, sentence_lens, reuse):
 
         inputs = tf.reshape(inputs, [-1, self.vocabulary_size])
-        #print('inputs_1 {}'.format(inputs))
+        # print('inputs_1 {}'.format(inputs))
         with tf.variable_scope('projection1', reuse=reuse):
             inputs = tf.layers.dense(inputs=inputs, units=self.input_size, activation=None)
 
@@ -97,7 +97,7 @@ class Encoder:
 
                 # reparametrization
                 z_concat = tf.contrib.layers.fully_connected(next_sampled_input, 2 * self.hidden_size)
-                z_concat = tf.contrib.layers.fully_connected(z_concat, 2 * self.hidden_size,activation_fn=None)
+                z_concat = tf.contrib.layers.fully_connected(z_concat, 2 * self.hidden_size, activation_fn=None)
 
                 z_mean = z_concat[:, :self.hidden_size]
                 z_mean = z_mean * 10
@@ -123,8 +123,8 @@ class Encoder:
 
                 word_slice = tf.logical_not(tf.cast(word_slice, dtype=tf.bool))
                 word_slice = tf.cast(word_slice, dtype=tf.float32)
-                #next_cell_state = tf.contrib.layers.layer_norm(next_cell_state)
-                #next_cell_state = next_cell_state + tf.multiply(cell_state[0], word_slice)
+                # next_cell_state = tf.contrib.layers.layer_norm(next_cell_state)
+                # next_cell_state = next_cell_state + tf.multiply(cell_state[0], word_slice)
                 next_cell_state = tf.multiply(cell_state[0], word_slice)
                 next_cell_state = tf.contrib.layers.layer_norm(next_cell_state)
                 next_cell_state = tf.contrib.rnn.LSTMStateTuple(next_cell_state, cell_output)
@@ -149,7 +149,7 @@ class Encoder:
 
 if __name__ == "__main__":
 
-    data, eow_loc_all,sen_lens, _, _, _, _ = run_preprocess(mode="train")
+    data, eow_loc_all, sen_lens, _, _, _, _ = run_preprocess(mode="train")
     print(len(data))
     max_char_len = 371
     batch_size = 40
@@ -157,18 +157,18 @@ if __name__ == "__main__":
     input_size = 61
     hidden_size = 20
     num_batches = len(data) // batch_size
-    sen_lens = np.reshape(sen_lens,[-1,batch_size])
+    sen_lens = np.reshape(sen_lens, [-1, batch_size])
     arg_dict = {'max_char_len': max_char_len, 'batch_size': batch_size, 'input_size': input_size,
-                'hidden_size': hidden_size,'vocabulary_size':vocabulary_size}
+                'hidden_size': hidden_size, 'vocabulary_size': vocabulary_size}
     encoder = Encoder(**arg_dict)
-
 
     # placeholders
     inputs_pl = tf.placeholder(tf.float32, [batch_size, max_char_len, input_size])
     word_pos_pl = tf.placeholder(tf.float32, [batch_size, max_char_len])
     sen_lens_pl = tf.placeholder(tf.float32, [batch_size])
 
-    word_state_out, mean_state_out, sigma_state_out = encoder.run_encoder(True,inputs=inputs_pl,word_pos=word_pos_pl,sentence_lens=sen_lens_pl,reuse=None)
+    word_state_out, mean_state_out, sigma_state_out = encoder.run_encoder(True, inputs=inputs_pl, word_pos=word_pos_pl,
+                                                                          sentence_lens=sen_lens_pl, reuse=None)
 
     # example
     init_op = tf.global_variables_initializer()
@@ -181,6 +181,7 @@ if __name__ == "__main__":
                 x = data[bt * batch_size:(bt + 1) * batch_size]
                 word_pos_batch = eow_loc_all[bt * batch_size:(bt + 1) * batch_size]
                 word_state, mean_state, sigma_state = sess.run([word_state_out, mean_state_out, sigma_state_out],
-                                                               feed_dict={inputs_pl: x, word_pos_pl: word_pos_batch,sen_lens_pl:sen_lens[bt]})
+                                                               feed_dict={inputs_pl: x, word_pos_pl: word_pos_batch,
+                                                                          sen_lens_pl: sen_lens[bt]})
 
                 print(word_state[3])
