@@ -1,5 +1,3 @@
-# graphs-and-NLP
-
 ## Character Based Language Models Through Variational Sentence and Word Embeddings
 
 Contributors:
