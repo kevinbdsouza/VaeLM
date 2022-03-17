@@ -183,8 +183,13 @@ def train(log_dir, n_epochs, network_dict, index2token, mode, **kwargs):
                                            global_latent_sample=global_latent_o_val, posterior_mu=mean_state_out_p_val,
                                            true_input=onehot_words_pl_val, predictions=test_logits)
 
+<<<<<<< HEAD
         # prior generative sampling
         gen_samples = decoder.generation(global_sample=global_sample, word_samples=word_samples)
+=======
+        #prior generative sampling
+        gen_samples = decoder.generation(global_sample=global_sample,word_samples=word_samples, dense_dim=decoder_dim)
+>>>>>>> cc6591deefb6037878676dd0b8ffd9822fbf0d5c
 
         # tensorboard
         tf_summary_train = tf.summary.merge(
